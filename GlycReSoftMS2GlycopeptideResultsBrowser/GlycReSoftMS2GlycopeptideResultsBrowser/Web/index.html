@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=11" />
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+
+    <script type="text/javascript">
+    var objects = []
+    </script>
+    <script type="text/javascript">
+
+    //Chrome passes the error object (5th param) which we must use since it now truncates the Msg (1st param).
+    window.onerror = function (errorMsg, url, lineNumber, columnNumber, errorObject) {
+        var errMsg;
+        //console.log(errorObject)
+        //check the errorObject as IE and FF don't pass it through (yet)
+        if (errorObject && errorObject !== undefined) {
+                errMsg = errorObject.message;
+        }
+        else {
+            errMsg = errorMsg;
+        }/*
+        if(console === "fruit"){
+            console.log('Error: ' + errMsg);
+        }
+        else {*/
+            alert('Error: ' + errMsg, console.log)
+        //}
+    }
+    </script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body ng-app="GlycReSoftMSMSGlycopeptideResultsViewApp" ng-controller="ClassifierResultsTableCtrl">
+    <header id='header-wrapper'>
+        <div>
+            <button id='save-csv-btn' save-csv  class="btn">Save CSV</button>
+        </div>
+        <h2 id='header-title'>GlycReSoft 2 Tandem MS Glycopeptide Analyzer</h2>
+        <div>
+          <button id='help-btn' class="btn btn-info"><b>?</b></button>
+        </div>
+    </header>
+
+    <div id="classifier-results">
+        <tabset>
+            <tab heading="Prediction Results Table" active select="scrollToSelection()">
+                <div class='gridStyle' ng-grid='gridOptions' resizable window-percent=0.75></div>
+                <div id='grid-controls'>
+                    <div id="top-control-row">
+                        <div id='filtrex-control'>
+                            <div class='input-group' ng-class="{'has-error': filtrexError}">
+                                <b>Filtering Expression</b>
+                                <a id='filtrex-usage-anchor' popover-html-unsafe="{{helpText.filtrex}}">Usage</a>
+                                <a id="filterable-names-anchor" popover-html-unsafe="{{'<b>' + headerSubstituitionDictionary.NAME_MAP.join('<br\>') + '</b>'}}">Filterable Names</a>
+                                <br/><input type='text' id='filtrex-control-input' class='form-control' ng-model="params.filtrexExpr" ng-model-options="{updateOn: 'blur default', debounce: {'default': 20000, 'blur': 0}}"/> {{predictions.length}} Matches
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </tab>
+            <tab heading="Prediction Plots" select="sendRenderPlotEvt()">
+                <div ambiguity-plot active="true"></div>
+            </tab>
+            <tab heading="Protein Sequence View" select="sendUpdateProteinViewEvt()">
+                <protein-sequence-view />
+            </tab>
+        </tabset>
+    </div>
+
+
+
+    <!-- Vendor Dependencies. -->
+    <script type="text/javascript" src='js/vendor/vendor.concat.js'></script>
+
+    <!-- Angular Application. -->
+    <script type="text/javascript" src='js/app.concat.js'></script>
+    <script type="text/javascript">
+    $(function(){
+        window.objects = []
+        window.registerDataChange = function (data){
+            try{
+                ctrl = angular.element("#classifier-results").controller()
+                objects = csvService.deserializeAfterParse(data)
+                ctrl.$apply(function(){
+                        ctrl._predictionsReceiver = objects
+                })
+                return ctrl._predictionsReceiver.length;
+            } catch (ex){
+                alert("An error occurred while injecting data: " + ex)
+            }
+
+        }
+        try{
+            d3.csv("/../Data/ExampleResults.csv", function(err, data){
+                if(err != null) console.log(err)
+                testObjects = _.cloneDeep(data)
+                ctrl = angular.element("#classifier-results").controller()
+                objects = csvService.deserializeAfterParse(data)
+                ctrl.$apply(function(){
+                    ctrl._predictionsReceiver = objects
+                })
+            })
+        } catch (ex) {
+            console.log(ex)
+        }
+    })
+
+    </script>
+</body>
+</html>

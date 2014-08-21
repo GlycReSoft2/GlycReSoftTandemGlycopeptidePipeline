@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F082213C-F8BF-4AE2-A79E-E60E3027FA54}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>GlycReSoft.MS2GUIDriver</RootNamespace>
+    <AssemblyName>GlycReSoftMS2GUIDriver</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>GlycReSoft.MS2GUIDriver.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CsvHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CsvHelper.2.7.0\lib\net40-client\CsvHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ConfigMenus\AlgorithmSettings.cs" />
+    <Compile Include="ConfigMenus\AlgorithmSettingsMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfigMenus\AlgorithmSettingsMenu.Designer.cs">
+      <DependentUpon>AlgorithmSettingsMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigMenus\ScriptingSettings.cs" />
+    <Compile Include="Data\BuiltInModels.cs" />
+    <Compile Include="GridViews\ClassifierResultsView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GridViews\ClassifierResultsView.Designer.cs">
+      <DependentUpon>ClassifierResultsView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigurationManager.cs" />
+    <Compile Include="Controllers\GUIController.cs" />
+    <Compile Include="GridViews\GridViewHelper.cs" />
+    <Compile Include="GridViews\ModelLabelView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GridViews\ModelLabelView.Designer.cs">
+      <DependentUpon>ModelLabelView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigMenus\ScriptingSettingsMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfigMenus\ScriptingSettingsMenu.Designer.cs">
+      <DependentUpon>ScriptingSettingsMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TandemGlycopeptideAnalysis.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TandemGlycopeptideAnalysis.Designer.cs">
+      <DependentUpon>TandemGlycopeptideAnalysis.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ConfigMenus\AlgorithmSettingsMenu.resx">
+      <DependentUpon>AlgorithmSettingsMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GridViews\ClassifierResultsView.resx">
+      <DependentUpon>ClassifierResultsView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GridViews\ModelLabelView.resx">
+      <DependentUpon>ModelLabelView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConfigMenus\ScriptingSettingsMenu.resx">
+      <DependentUpon>ScriptingSettingsMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TandemGlycopeptideAnalysis.resx">
+      <DependentUpon>TandemGlycopeptideAnalysis.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Content Include="Data\USSRInfluenzaModel.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config" />
+    <None Include="Properties\DataSources\TandemGlycopeptideAnalysis.datasource" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GlycReSoftMS2GlycopeptideResultsBrowser\GlycReSoftMS2GlycopeptideResultsBrowser\GlycReSoftMS2GlycopeptideResultsBrowser.csproj">
+      <Project>{343ac919-e300-4d8d-aef2-5777afbc591a}</Project>
+      <Name>GlycReSoftMS2GlycopeptideResultsBrowser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TandemGlycoPeptidePipeline\TandemGlycopeptidePipeline.csproj">
+      <Project>{77808b4f-dee5-4213-ba06-c27b5b29b748}</Project>
+      <Name>TandemGlycopeptidePipeline</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\Models.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
