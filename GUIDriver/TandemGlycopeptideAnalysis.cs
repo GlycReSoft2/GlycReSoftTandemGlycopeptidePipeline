@@ -107,6 +107,23 @@ namespace GlycReSoft.MS2GUIDriver
             }
         }
 
+        private void AddProteinProspectorMSDigestXmlFileButton_Click(object sender, EventArgs e)
+        {
+            DialogResult proteinProspectorMSDigestXmlResult = openFileDialog1.ShowDialog();
+            if (proteinProspectorMSDigestXmlResult == DialogResult.OK)
+            {
+                try
+                {
+                    Controller.ProteinProspectorMSDigestFilePath = openFileDialog1.FileName;
+                }
+                catch (IOException ex)
+                {
+                    MessageBox.Show("Could not open " + openFileDialog1.FileName +
+                        ". Error: " + ex.Message);
+                }
+            }
+        }
+
         private void SetModelFilePath_Action(object sender, EventArgs e)
         {
             DialogResult modelFileDialogResult = openFileDialog1.ShowDialog();
@@ -123,6 +140,8 @@ namespace GlycReSoft.MS2GUIDriver
                 }
             }
         }
+
+
 
         /// <summary>
         /// Given MS, MS/MS, and glycosylation site data, run the pipeline up to but
@@ -347,6 +366,8 @@ namespace GlycReSoft.MS2GUIDriver
             }
 
         }
+
+
 
     }
 }

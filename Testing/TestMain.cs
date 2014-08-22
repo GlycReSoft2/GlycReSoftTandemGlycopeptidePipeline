@@ -11,20 +11,23 @@ namespace Testing
 {
     class TestMain
     {
+
+        static String[] Modifications = {"Deamidated (N)", "Deamidated (Q)", "Dehydrated (C-term)", "Dehydrated (D)", "Carbamidomethyl (C)"};
+
         static void Main(string[] args)
         {
             Console.WriteLine("Starting TestMain");
-            Console.WriteLine(Properties.Resources.TestMS1Matches);
-            Console.WriteLine(Properties.Resources.TestMS1Matches.Replace("\"",""));
-
-            TestModelBuildRun();
+            
+            //TestModelBuildRun();
             TestFullRun();
+
             Console.WriteLine("Any key to continue");
             Console.Read();
         }
 
-        static void TestScripting()
+        static void TestScriptingInstallDependencies()
         {
+            Console.WriteLine("Test Scripting Install Dependencies");
             ScriptManager scripter = new ScriptManager(rscriptExecutablePath: Properties.Resources.DevelRscriptPath);
 
             Console.WriteLine(scripter);
@@ -32,11 +35,6 @@ namespace Testing
             scripter.VerifyFileSystemTargets();
 
             scripter.InstallRDependencies();
-            Console.WriteLine(scripter.LastCall.GenerateDumpMessage());
-
-            scripter.RunClassificationPythonPipeline(Properties.Resources.TestMS1Matches,
-                Properties.Resources.TestGlycosylationSites, Properties.Resources.TestDeconvolutedMS2,
-                Properties.Resources.TestGoldStandard, "test.csv");
             Console.WriteLine(scripter.LastCall.GenerateDumpMessage());
         }
 
@@ -55,9 +53,17 @@ namespace Testing
 
         static ResultsRepresentation TestFullRun()
         {
+            Console.WriteLine("TestFullRun");
             AnalysisPipeline pipeline = new AnalysisPipeline(Properties.Resources.TestMS1Matches,
                 Properties.Resources.TestGlycosylationSites, Properties.Resources.TestDeconvolutedMS2,
-                Properties.Resources.TestGoldStandard, "test.csv", rscriptPath: Properties.Resources.DevelRscriptPath);
+                Properties.Resources.TestGoldStandard, 
+                ms1MatchingTolerance:1e-5,
+                ms2MatchingTolerance:2e-5,
+                constantModifications: Modifications,
+                variableModifications: Modifications,
+                method:"default",
+                outputFilePath:"test.csv",                 
+                rscriptPath: Properties.Resources.DevelRscriptPath);
             ResultsRepresentation results = null;
             try
             {
@@ -83,15 +89,21 @@ namespace Testing
 
         static ResultsRepresentation TestModelBuildRun()
         {
+            Console.WriteLine("TestModelBuildRun");
             AnalysisPipeline pipeline = new AnalysisPipeline(Properties.Resources.TestMS1Matches,
-                Properties.Resources.TestGlycosylationSites, Properties.Resources.TestDeconvolutedMS2,
-                Properties.Resources.TestGoldStandard, "test.csv", rscriptPath: Properties.Resources.DevelRscriptPath);
+                Properties.Resources.TestGlycosylationSites, 
+                Properties.Resources.TestDeconvolutedMS2,
+                Properties.Resources.TestGoldStandard,
+                method: "default",
+                constantModifications: Modifications,
+                variableModifications: Modifications,
+                ms1MatchingTolerance: 1e-5,
+                ms2MatchingTolerance: 2e-5,
+                outputFilePath:"test.csv", rscriptPath: Properties.Resources.DevelRscriptPath);
             ResultsRepresentation model = null;
             try
             {
-                var resultsFile = pipeline.Scripter.RunModelBuildingPythonPipeline(pipeline.MS1MatchFilePath, pipeline.GlycosylationSiteFilePath, pipeline.MS2DeconFilePath);
-                Console.WriteLine(resultsFile);
-                model = new ResultsRepresentation(resultsFile);
+                model = pipeline.RunModelBuilder();
                 int i = 0;
                 foreach (GlycopeptidePrediction pred in model.MatchedPredictions)
                 {

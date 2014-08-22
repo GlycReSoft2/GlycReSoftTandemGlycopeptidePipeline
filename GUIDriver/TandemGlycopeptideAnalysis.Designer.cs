@@ -45,6 +45,8 @@
             this.ViewModelButton = new System.Windows.Forms.Button();
             this.AlgorithmSettingsButton = new System.Windows.Forms.Button();
             this.ViewResultsButton = new System.Windows.Forms.Button();
+            this.ProteinProspectorMSDigestXMLLabel = new System.Windows.Forms.Label();
+            this.AddProteinProspectorMSDigestXmlFileButton = new System.Windows.Forms.Button();
             this.FileSelectionPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -112,6 +114,8 @@
             // 
             // FileSelectionPanel
             // 
+            this.FileSelectionPanel.Controls.Add(this.ProteinProspectorMSDigestXMLLabel);
+            this.FileSelectionPanel.Controls.Add(this.AddProteinProspectorMSDigestXmlFileButton);
             this.FileSelectionPanel.Controls.Add(this.SelectModelComboBox);
             this.FileSelectionPanel.Controls.Add(this.SetParameterFilesLabel);
             this.FileSelectionPanel.Controls.Add(this.ModelFilePathLabel);
@@ -123,13 +127,13 @@
             this.FileSelectionPanel.Controls.Add(this.MS1MatchFilePathLoadButton);
             this.FileSelectionPanel.Location = new System.Drawing.Point(1, 4);
             this.FileSelectionPanel.Name = "FileSelectionPanel";
-            this.FileSelectionPanel.Size = new System.Drawing.Size(628, 172);
+            this.FileSelectionPanel.Size = new System.Drawing.Size(628, 181);
             this.FileSelectionPanel.TabIndex = 6;
             // 
             // SelectModelComboBox
             // 
             this.SelectModelComboBox.FormattingEnabled = true;
-            this.SelectModelComboBox.Location = new System.Drawing.Point(12, 127);
+            this.SelectModelComboBox.Location = new System.Drawing.Point(12, 153);
             this.SelectModelComboBox.Name = "SelectModelComboBox";
             this.SelectModelComboBox.Size = new System.Drawing.Size(194, 21);
             this.SelectModelComboBox.TabIndex = 9;
@@ -148,7 +152,7 @@
             // ModelFilePathLabel
             // 
             this.ModelFilePathLabel.AutoSize = true;
-            this.ModelFilePathLabel.Location = new System.Drawing.Point(225, 130);
+            this.ModelFilePathLabel.Location = new System.Drawing.Point(225, 156);
             this.ModelFilePathLabel.Name = "ModelFilePathLabel";
             this.ModelFilePathLabel.Size = new System.Drawing.Size(33, 13);
             this.ModelFilePathLabel.TabIndex = 7;
@@ -215,6 +219,25 @@
             this.ViewResultsButton.UseVisualStyleBackColor = true;
             this.ViewResultsButton.Click += new System.EventHandler(this.ViewResultsButton_Click);
             // 
+            // ProteinProspectorMSDigestXMLLabel
+            // 
+            this.ProteinProspectorMSDigestXMLLabel.AutoSize = true;
+            this.ProteinProspectorMSDigestXMLLabel.Location = new System.Drawing.Point(225, 130);
+            this.ProteinProspectorMSDigestXMLLabel.Name = "ProteinProspectorMSDigestXMLLabel";
+            this.ProteinProspectorMSDigestXMLLabel.Size = new System.Drawing.Size(33, 13);
+            this.ProteinProspectorMSDigestXMLLabel.TabIndex = 11;
+            this.ProteinProspectorMSDigestXMLLabel.Text = "None";
+            // 
+            // AddProteinProspectorMSDigestXmlFileButton
+            // 
+            this.AddProteinProspectorMSDigestXmlFileButton.Location = new System.Drawing.Point(12, 125);
+            this.AddProteinProspectorMSDigestXmlFileButton.Name = "AddProteinProspectorMSDigestXmlFileButton";
+            this.AddProteinProspectorMSDigestXmlFileButton.Size = new System.Drawing.Size(194, 23);
+            this.AddProteinProspectorMSDigestXmlFileButton.TabIndex = 10;
+            this.AddProteinProspectorMSDigestXmlFileButton.Text = "Add Protein Prospector MS-Digest XML";
+            this.AddProteinProspectorMSDigestXmlFileButton.UseVisualStyleBackColor = true;
+            this.AddProteinProspectorMSDigestXmlFileButton.Click += new System.EventHandler(this.AddProteinProspectorMSDigestXmlFileButton_Click);
+            // 
             // TandemGlycopeptideAnalysis
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -254,6 +277,8 @@
         private System.Windows.Forms.Button AlgorithmSettingsButton;
         private System.Windows.Forms.ComboBox SelectModelComboBox;
         private System.Windows.Forms.Button ViewResultsButton;
+        private System.Windows.Forms.Label ProteinProspectorMSDigestXMLLabel;
+        private System.Windows.Forms.Button AddProteinProspectorMSDigestXmlFileButton;
     }
 }
 

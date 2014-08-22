@@ -58,6 +58,17 @@ namespace GlycReSoft.MS2GUIDriver.Controllers
             }
         }
 
+        private String _ProteinProspectorMSDigestFilePath;
+        public String ProteinProspectorMSDigestFilePath
+        {
+            get { return _ProteinProspectorMSDigestFilePath; }
+            set
+            {
+                _ProteinProspectorMSDigestFilePath = value;
+                OnPropertyChanged("ProteinProspectorMSDigestFilePath");
+            }
+        }
+
         public String ResultsFilePath { get; set; }
 
         public AnalysisPipeline Pipeline = null;               
@@ -70,7 +81,7 @@ namespace GlycReSoft.MS2GUIDriver.Controllers
             MS2DeconvolutionFilePath = null;
             GlycosylationSiteFilePath = null;
             ModelFilePath = null;
-            ResultsFilePath = null;            
+            ResultsFilePath = null;           
         }
 
 
