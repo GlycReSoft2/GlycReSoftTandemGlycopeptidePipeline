@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace GlycReSoft.MS2GUIDriver.ConfigMenus
+namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 {
     public class AlgorithmSettings : JsonConfig
     {

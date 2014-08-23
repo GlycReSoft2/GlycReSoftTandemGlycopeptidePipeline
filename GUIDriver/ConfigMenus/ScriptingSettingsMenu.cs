@@ -1,4 +1,4 @@
-﻿using GlycReSoft.MS2GUIDriver.ConfigMenus;
+﻿using GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +11,7 @@ using System.Windows.Forms;
 using GlycReSoft.TandemGlycopeptidePipeline;
 
 
-namespace GlycReSoft.MS2GUIDriver.ConfigMenus
+namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 {
     public partial class ScriptingSettingsMenu : Form
     {
@@ -51,11 +51,12 @@ namespace GlycReSoft.MS2GUIDriver.ConfigMenus
                 ConfigurationManager.Scripting.RscriptInterpreterPath);
             try
             {
-
+                scriptingManager.VerifyFileSystemTargets();
+                scriptingManager.InstallPythonDependencies();
             }
             catch (Exception ex)
             {
-
+                MessageBox.Show(ex.Message);
             }
         }
 

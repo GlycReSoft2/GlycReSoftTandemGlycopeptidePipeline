@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace GlycReSoft.MS2GUIDriver.ConfigMenus
+namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 {
     public partial class AlgorithmSettingsMenu : Form
     {

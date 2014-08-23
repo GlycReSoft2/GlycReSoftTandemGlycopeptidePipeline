@@ -140,6 +140,25 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             this.LastCall = proc;            
         }
 
+        public void InstallPythonDependencies()
+        {
+            ProcessManager proc = new ProcessManager(this.PythonExecutablePath, "-m pip -h");
+            proc.Start();
+            proc.WaitForExit();
+            if (!proc.CheckExitSuccessfully())
+            {
+                throw new PythonDependencyInstallerException("The Python Package Manager pip wasn't found. Is it installed? If not, go to https://pip.readthedocs.org/en/latest/installing.html for more information on how to get it. " + proc.GenerateDumpMessage());
+            } 
+            proc = new ProcessManager(this.PythonExecutablePath, "-m pip install pyyaml --user");
+            proc.Start();
+            proc.WaitForExit();
+            if (!proc.CheckExitSuccessfully())
+            {
+                throw new PythonScriptErrorException(proc.GenerateDumpMessage());
+            }
+            
+        }
+
         /// <summary>
         /// Executes the Python script pipeline stored at @ScriptRoot, with the 
         /// __main__.py entry-point. The pipeline emits intermediary file names,
@@ -341,6 +360,18 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public PythonScriptErrorException(string message) : base(message) { }
         public PythonScriptErrorException(string message, Exception inner) : base(message, inner) { }
         protected PythonScriptErrorException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
+    }
+
+    [Serializable]
+    public class PythonDependencyInstallerException : ScriptingException
+    {
+        public PythonDependencyInstallerException() { }
+        public PythonDependencyInstallerException(string message) : base(message) { }
+        public PythonDependencyInstallerException(string message, Exception inner) : base(message, inner) { }
+        protected PythonDependencyInstallerException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context)
             : base(info, context) { }

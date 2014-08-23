@@ -38,11 +38,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CsvHelper">
-      <HintPath>..\..\TandemGlycoPeptidePipeline\packages\CsvHelper.2.7.0\lib\net40-client\CsvHelper.dll</HintPath>
+      <HintPath>..\..\..\packages\CsvHelper.2.7.0\lib\net40-client\CsvHelper.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\TandemGlycoPeptidePipeline\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -160,7 +160,7 @@
     <Folder Include="Web\bower_components\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TandemGlycoPeptidePipeline\TandemGlycopeptidePipeline.csproj">
+    <ProjectReference Include="..\TandemGlycoPeptidePipeline\TandemGlycopeptidePipeline.csproj">
       <Project>{77808b4f-dee5-4213-ba06-c27b5b29b748}</Project>
       <Name>TandemGlycopeptidePipeline</Name>
     </ProjectReference>

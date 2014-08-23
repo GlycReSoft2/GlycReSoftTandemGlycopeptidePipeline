@@ -1,4 +1,4 @@
-﻿namespace GlycReSoft.MS2GUIDriver.GridViews
+﻿namespace GlycReSoft.TandemMSGlycopeptideGUI.GridViews
 {
     partial class ModelLabelView
     {
@@ -38,7 +38,7 @@
             this.MS2MatchDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.MS2MatchDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.MS2MatchDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.MS2MatchDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.MS2MatchDataGridView.Location = new System.Drawing.Point(7, 7);
             this.MS2MatchDataGridView.Name = "MS2MatchDataGridView";
@@ -47,7 +47,7 @@
             // 
             // SaveModelButton
             // 
-            this.SaveModelButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.SaveModelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SaveModelButton.Location = new System.Drawing.Point(12, 513);
             this.SaveModelButton.Name = "SaveModelButton";
             this.SaveModelButton.Size = new System.Drawing.Size(75, 23);

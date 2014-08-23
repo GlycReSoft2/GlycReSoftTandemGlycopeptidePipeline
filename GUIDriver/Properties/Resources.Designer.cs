@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GlycReSoft.MS2GUIDriver.Properties {
+namespace GlycReSoft.TandemMSGlycopeptideGUI.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace GlycReSoft.MS2GUIDriver.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GlycReSoft.MS2GUIDriver.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("GlycReSoft.TandemMSGlycopeptideGUI.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

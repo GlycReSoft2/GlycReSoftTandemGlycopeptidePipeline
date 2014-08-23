@@ -1,4 +1,4 @@
-﻿namespace GlycReSoft.MS2GUIDriver.ConfigMenus
+﻿namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 {
     partial class ScriptingSettingsMenu
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace GlycReSoft.MS2GUIDriver
+namespace GlycReSoft.TandemMSGlycopeptideGUI
 {
     static class Program
     {

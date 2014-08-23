@@ -7,7 +7,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
     scalingUpFn = function(value) {
       return Math.exp(value);
     };
-    ambiguityPlotTemplater = function(scope, seriesData, xAxisTitle, yAxisTitle) {
+    ambiguityPlotTemplater = function(scope, seriesData, xAxisTitle, yAxisTitle, tooltipFormatter) {
       var ambiguityPlotTemplateImpl, infitesimal;
       infitesimal = 1 / (Math.pow(1000, 1000));
       return ambiguityPlotTemplateImpl = {
@@ -52,14 +52,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           height: $window.innerHeight * .8
         },
         tooltip: {
-          formatter: function() {
-            var contents, point;
-            point = this.point;
-            contents = " MS1 Score: <b>" + point.x + "</b><br/> Mass: <b>" + (scalingUpFn(point.z)) + "</b><br/> MS2 Score: <b>" + point.y + "</b>(ME: <i>" + point.MS2_ScoreMeanError + "</i>)<br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
-            return contents;
-          },
+          formatter: tooltipFormatter,
           headerFormat: "<span style=\"color:{series.color}\">●</span> {series.name}</span><br/>",
-          pointFormat: " MS1 Score: <b>{point.x}</b>" + "<br/>Mass: <b>{point.z}</b><br/>MS2 Score: <b>{point.y}</b>(ME: <i>{point.MS2_ScoreMeanError}</i>)<br/> Number of Matches: <b>{series.data.length}</b><br/>",
           positioner: function(boxWidth, boxHeight, point) {
             var ttAnchor;
             ttAnchor = {
@@ -118,7 +112,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           _.forEach(group, function(pred) {
             return pred.MS2_ScoreMeanError = 0;
           });
-          return notAmbiguous.push({
+          return ionMassMS1Series.push({
             data: group,
             name: "MS1/Mass " + id
           });
@@ -217,14 +211,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
       };
     };
     updatePlot = function(predictions, scope, element) {
-      var chart, groupParams, ionSeries, notAmbiguous, plotOptions, xAxisTitle, yAxisTitle, _ref;
+      var chart, groupParams, ionSeries, notAmbiguous, plotOptions, tooltipFormatter, xAxisTitle, yAxisTitle, _ref;
       groupParams = scope.grouping.groupingFnKey;
       console.log("Grouping Parameters: ", groupParams);
       scope.seriesData = groupParams.groupingFn(predictions);
       console.log("Series Data: ", scope.seriesData);
       scope.describedPredictions = [];
       _ref = scope.seriesData, ionSeries = _ref.ionSeries, notAmbiguous = _ref.notAmbiguous;
-      plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle = groupParams.xAxisTitle, yAxisTitle = groupParams.yAxisTitle);
+      plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle = groupParams.xAxisTitle, yAxisTitle = groupParams.yAxisTitle, tooltipFormatter = groupParams.tooltipFormatter);
       console.log(plotOptions);
       chart = element.find(".ambiguity-plot-container");
       return chart.highcharts(plotOptions);
@@ -245,12 +239,22 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           "MS1 Score + Mass": {
             groupingFn: ms1MassGroupingFn,
             xAxisTitle: "MS1 Score",
-            yAxisTitle: "MS2 Score"
+            yAxisTitle: "MS2 Score",
+            tooltipFormatter: function() {
+              var contents, point;
+              point = this.point;
+              return contents = " MS1 Score: <b>" + point.x + "</b><br/> Mass: <b>" + (scalingUpFn(point.z)) + "</b><br/> MS2 Score: <b>" + point.y + "</b>(ME: <i>" + point.MS2_ScoreMeanError + "</i>)<br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
+            }
           },
           "Start AA + Length": {
             groupingFn: positionGroupingFn,
             xAxisTitle: "Peptide Start Position",
-            yAxisTitle: "MS2 Score"
+            yAxisTitle: "MS2 Score",
+            tooltipFormatter: function() {
+              var contents, point;
+              point = this.point;
+              return contents = " Amino Acid Span: <b>" + point.x + " -> " + (point.x + point.z) + "</b><br/> MS2 Score: <b>" + point.y + "</b><br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
+            }
           }
         };
         scope._ = _;

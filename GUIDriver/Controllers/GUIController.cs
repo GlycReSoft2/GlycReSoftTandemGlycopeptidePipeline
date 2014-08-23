@@ -6,8 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GlycReSoft.TandemGlycopeptidePipeline;
+using GlycReSoft.CompositionHypothesis;
+using System.IO;
 
-namespace GlycReSoft.MS2GUIDriver.Controllers
+namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
 {
     [System.ComponentModel.Bindable(true)]
     public class TandemMSGlycopeptideGUIController : INotifyPropertyChanged
@@ -81,7 +83,8 @@ namespace GlycReSoft.MS2GUIDriver.Controllers
             MS2DeconvolutionFilePath = null;
             GlycosylationSiteFilePath = null;
             ModelFilePath = null;
-            ResultsFilePath = null;           
+            ResultsFilePath = null;
+            ProteinProspectorMSDigestFilePath = null;
         }
 
 
@@ -98,13 +101,21 @@ namespace GlycReSoft.MS2GUIDriver.Controllers
             try
             {
 
+                MSDigestReport proteinProspectorReport = MSDigestReport.Load(ProteinProspectorMSDigestFilePath);
+                MSDigestReportParameters digestParameters = proteinProspectorReport.Parameters;
+
                 this.Pipeline = new AnalysisPipeline(MS1MatchFilePath, 
                     GlycosylationSiteFilePath, MS2DeconvolutionFilePath, 
                     goldStandardPath: ModelFilePath, outputFilePath: null,
+                    constantModifications: proteinProspectorReport.ConstantModifications,
+                    variableModifications: proteinProspectorReport.VariableModifications,
+                    ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
+                    ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
                     pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
                     rscriptPath: ConfigurationManager.Scripting.RscriptInterpreterPath);
 
-                ResultsRepresentation results = Pipeline.RunClassification();                
+                ResultsRepresentation results = Pipeline.RunClassification();
+                File.Delete(results.SourceFile);
                 return results;
 
             }
@@ -116,14 +127,30 @@ namespace GlycReSoft.MS2GUIDriver.Controllers
             }
         }
 
+        /// <summary>
+        /// Runs the Model Building Pipeline, yielding a partially annotated model in the form of a ResultsRepresentation object
+        /// which is made from the parameters loaded into the Controller.
+        /// </summary>
+        /// <returns></returns>
         public ResultsRepresentation PrepareModelFile()
         {
             try
             {
-                this.Pipeline = new AnalysisPipeline(MS1MatchFilePath, GlycosylationSiteFilePath, MS2DeconvolutionFilePath, goldStandardPath: null, outputFilePath: null,
+                MSDigestReport proteinProspectorReport = MSDigestReport.Load(ProteinProspectorMSDigestFilePath);
+                MSDigestReportParameters digestParameters = proteinProspectorReport.Parameters;
+
+                this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
+                    GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
+                    goldStandardPath: ModelFilePath, outputFilePath: null,
+                    constantModifications: proteinProspectorReport.ConstantModifications,
+                    variableModifications: proteinProspectorReport.VariableModifications,
+                    ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
+                    ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
                     pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
                     rscriptPath: ConfigurationManager.Scripting.RscriptInterpreterPath);
+
                 ResultsRepresentation modelRepresentation = Pipeline.RunModelBuilder();
+                File.Delete(modelRepresentation.SourceFile);
                 return modelRepresentation;
             }
             catch (TandemGlycoPeptidePipelineException e)

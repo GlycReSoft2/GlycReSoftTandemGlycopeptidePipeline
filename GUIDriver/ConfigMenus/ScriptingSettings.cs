@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GlycReSoft.MS2GUIDriver.ConfigMenus
+namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 {
     /// <summary>
     /// Represent the relevant information for interacting with the scripting applications on the host machine

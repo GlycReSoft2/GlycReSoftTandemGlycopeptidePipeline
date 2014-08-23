@@ -1,6 +1,6 @@
-﻿using GlycReSoft.MS2GUIDriver.ConfigMenus;
-using GlycReSoft.MS2GUIDriver.Controllers;
-using GlycReSoft.MS2GUIDriver.Data;
+﻿using GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus;
+using GlycReSoft.TandemMSGlycopeptideGUI.Controllers;
+using GlycReSoft.TandemMSGlycopeptideGUI.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,10 +13,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using GlycReSoft.TandemGlycopeptidePipeline;
-using GlycReSoft.MS2GUIDriver.GridViews;
+using GlycReSoft.TandemMSGlycopeptideGUI.GridViews;
 using GlycReSoft.MS2GlycopeptideResultsBrowser;
+using GlycReSoft.Generics.GenericForms;
 
-namespace GlycReSoft.MS2GUIDriver
+namespace GlycReSoft.TandemMSGlycopeptideGUI
 {
     public partial class TandemGlycopeptideAnalysis : Form
     {
@@ -25,7 +26,7 @@ namespace GlycReSoft.MS2GUIDriver
 
         TandemMSGlycopeptideGUIController Controller;
         Models PreparedModels;
-        public Form WaitScreen;
+        PleaseWait WaitScreen;
 
         public TandemGlycopeptideAnalysis()
         {
@@ -34,6 +35,7 @@ namespace GlycReSoft.MS2GUIDriver
             ConfigurationManager.Scripting = ConfigurationManager.LoadScriptingSettings(Application.StartupPath);
             ConfigurationManager.Algorithm = ConfigurationManager.LoadAlgorithmSettings(Application.StartupPath);
 
+            WaitScreen = new PleaseWait();
             Controller = new TandemMSGlycopeptideGUIController();
             //Load pre-configured model index distributed with software from XML
             PreparedModels = BuiltInModels.Load();
@@ -43,6 +45,7 @@ namespace GlycReSoft.MS2GUIDriver
             this.MS2DeconvolutionFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "MS2DeconvolutionFilePath"));
             this.GlycosylationSiteFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "GlycosylationSiteFilePath"));
             this.ModelFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "ModelFilePath"));
+            this.ProteinProspectorMSDigestXMLLabel.DataBindings.Add(new Binding("Text", Controller, "ProteinProspectorMSDigestFilePath"));
 
             //Initialize ComboBox with label defining function of ComboBox
             SelectModelComboBox.Items.Add(SELECT_MODEL_DEFAULT);
@@ -160,13 +163,15 @@ namespace GlycReSoft.MS2GUIDriver
                 BackgroundWorker createModelWorker = new BackgroundWorker();
                 createModelWorker.DoWork += createModelWorker_DoWork;
                 createModelWorker.RunWorkerCompleted += createModelWorker_RunWorkerCompleted;
-                createModelWorker.RunWorkerAsync();
-                //var preparedModelData = Controller.PrepareModelFile();
-                //if (preparedModelData == null)
-                //{
-                //    return;
-                //}
-                //this.ShowModelLabelView(preparedModelData);
+                try {
+                    createModelWorker.RunWorkerAsync();
+                    WaitScreen.ShowDialog();
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show("An error occurred while processing this task: " + ex.Message);
+                }
+
             }
             else
             {
@@ -184,12 +189,13 @@ namespace GlycReSoft.MS2GUIDriver
             }
             else
             {
+                WaitScreen.Close();
                 this.ShowModelLabelView(preparedModelData);
             }            
         }
 
         void createModelWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
+        {            
             var preparedModelData = Controller.PrepareModelFile();
             e.Result = preparedModelData;
         }
@@ -210,8 +216,7 @@ namespace GlycReSoft.MS2GUIDriver
         /// </summary>
         /// <param name="classifierData"></param>
         private void ShowClassifierResultsView(ResultsRepresentation classifierData)
-        {
-            Console.WriteLine("Showing Classifier Results View");
+        {            
             WebResultsViewer resultsView = new WebResultsViewer(classifierData);            
             resultsView.Show();
         }
@@ -231,13 +236,16 @@ namespace GlycReSoft.MS2GUIDriver
                 BackgroundWorker classifyWorker = new BackgroundWorker();
                 classifyWorker.DoWork += classifyWorker_DoWork;
                 classifyWorker.RunWorkerCompleted += classifyWorker_RunWorkerCompleted;
-                classifyWorker.RunWorkerAsync();
-                //var classifiedData = Controller.ClassifyGlycopeptideTandemMS();
-                //if (classifiedData == null)
-                //{
-                //    return;
-                //}
-                //this.ShowClassifierResultsView(classifiedData);
+                try
+                {
+                    classifyWorker.RunWorkerAsync();
+                    WaitScreen.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred while processing this task: " + ex.Message);
+                }
+                
             }
             else
             {
@@ -254,6 +262,7 @@ namespace GlycReSoft.MS2GUIDriver
         /// <param name="e"></param>
         void classifyWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            WaitScreen.Close();
             ResultsRepresentation classifiedData = e.Result as ResultsRepresentation;
             if (classifiedData == null)
             {

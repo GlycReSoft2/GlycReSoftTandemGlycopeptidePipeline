@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace GlycReSoft.MS2GUIDriver.GridViews
+namespace GlycReSoft.TandemMSGlycopeptideGUI.GridViews
 {
     public static class GridViewHelper
     {

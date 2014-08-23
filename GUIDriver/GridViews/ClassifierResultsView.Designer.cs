@@ -1,4 +1,4 @@
-﻿namespace GlycReSoft.MS2GUIDriver.GridViews
+﻿namespace GlycReSoft.TandemMSGlycopeptideGUI.GridViews
 {
     partial class ClassifierResultsView
     {

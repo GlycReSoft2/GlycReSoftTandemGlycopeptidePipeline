@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
-namespace GlycReSoft.MS2GUIDriver.Data
+namespace GlycReSoft.TandemMSGlycopeptideGUI.Data
 {
     public static class BuiltInModels
     {

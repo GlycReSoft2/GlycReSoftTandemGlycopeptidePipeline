@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace GlycReSoft.MS2GUIDriver.Properties {
+namespace GlycReSoft.TandemMSGlycopeptideGUI.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

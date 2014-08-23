@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Windows.Forms;
-using GlycReSoft.MS2GUIDriver.ConfigMenus;
+using GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus;
 
-namespace GlycReSoft.MS2GUIDriver
+namespace GlycReSoft.TandemMSGlycopeptideGUI
 {
 
     public class JsonConfig

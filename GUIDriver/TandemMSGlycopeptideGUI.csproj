@@ -7,8 +7,8 @@
     <ProjectGuid>{F082213C-F8BF-4AE2-A79E-E60E3027FA54}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GlycReSoft.MS2GUIDriver</RootNamespace>
-    <AssemblyName>GlycReSoftMS2GUIDriver</AssemblyName>
+    <RootNamespace>GlycReSoft.TandemMSGlycopeptideGUI</RootNamespace>
+    <AssemblyName>TandemMSGlycopeptideGUI</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -34,7 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>GlycReSoft.MS2GUIDriver.Program</StartupObject>
+    <StartupObject>GlycReSoft.TandemMSGlycopeptideGUI.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CsvHelper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
@@ -139,7 +139,15 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GlycReSoftMS2GlycopeptideResultsBrowser\GlycReSoftMS2GlycopeptideResultsBrowser\GlycReSoftMS2GlycopeptideResultsBrowser.csproj">
+    <ProjectReference Include="..\..\CompositionHypothesis\CompositionHypothesis.csproj">
+      <Project>{6ec79573-c90b-4b48-b28b-cf67995a63ad}</Project>
+      <Name>CompositionHypothesis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GenericForms.cs\GenericForms.csproj">
+      <Project>{05be70cb-9bf5-4c16-be39-6cd7b4c19df7}</Project>
+      <Name>GenericForms</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GlycReSoftMS2GlycopeptideResultsBrowser\GlycReSoftMS2GlycopeptideResultsBrowser.csproj">
       <Project>{343ac919-e300-4d8d-aef2-5777afbc591a}</Project>
       <Name>GlycReSoftMS2GlycopeptideResultsBrowser</Name>
     </ProjectReference>

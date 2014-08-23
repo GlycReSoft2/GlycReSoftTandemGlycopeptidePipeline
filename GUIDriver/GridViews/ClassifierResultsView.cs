@@ -1,4 +1,4 @@
-﻿using GlycReSoft.MS2GUIDriver.GridViews;
+﻿using GlycReSoft.TandemMSGlycopeptideGUI.GridViews;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using GlycReSoft.TandemGlycopeptidePipeline;
 
-namespace GlycReSoft.MS2GUIDriver.GridViews
+namespace GlycReSoft.TandemMSGlycopeptideGUI.GridViews
 {
-    public partial class ClassifierResultsView : GlycReSoft.MS2GUIDriver.GridViews.ModelLabelView
+    public partial class ClassifierResultsView : GlycReSoft.TandemMSGlycopeptideGUI.GridViews.ModelLabelView
     {
         public ClassifierResultsView() : base()
         {
