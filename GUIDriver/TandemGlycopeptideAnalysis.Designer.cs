@@ -182,6 +182,7 @@
             // 
             // CreateModelActionButton
             // 
+            this.CreateModelActionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.CreateModelActionButton.Location = new System.Drawing.Point(21, 219);
             this.CreateModelActionButton.Name = "CreateModelActionButton";
             this.CreateModelActionButton.Size = new System.Drawing.Size(95, 35);
@@ -192,6 +193,7 @@
             // 
             // ClassifyMSMSSpectraActionButton
             // 
+            this.ClassifyMSMSSpectraActionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ClassifyMSMSSpectraActionButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ClassifyMSMSSpectraActionButton.Location = new System.Drawing.Point(21, 260);
             this.ClassifyMSMSSpectraActionButton.Name = "ClassifyMSMSSpectraActionButton";
@@ -203,6 +205,8 @@
             // 
             // ScriptingSettingsButton
             // 
+            this.ScriptingSettingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.ScriptingSettingsButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ScriptingSettingsButton.Location = new System.Drawing.Point(520, 219);
             this.ScriptingSettingsButton.Name = "ScriptingSettingsButton";
             this.ScriptingSettingsButton.Size = new System.Drawing.Size(99, 35);
@@ -213,6 +217,7 @@
             // 
             // ViewModelButton
             // 
+            this.ViewModelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ViewModelButton.Location = new System.Drawing.Point(122, 219);
             this.ViewModelButton.Name = "ViewModelButton";
             this.ViewModelButton.Size = new System.Drawing.Size(94, 35);
@@ -223,6 +228,8 @@
             // 
             // AlgorithmSettingsButton
             // 
+            this.AlgorithmSettingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.AlgorithmSettingsButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.AlgorithmSettingsButton.Location = new System.Drawing.Point(520, 260);
             this.AlgorithmSettingsButton.Name = "AlgorithmSettingsButton";
             this.AlgorithmSettingsButton.Size = new System.Drawing.Size(99, 34);
@@ -233,6 +240,7 @@
             // 
             // ViewResultsButton
             // 
+            this.ViewResultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ViewResultsButton.Location = new System.Drawing.Point(122, 259);
             this.ViewResultsButton.Name = "ViewResultsButton";
             this.ViewResultsButton.Size = new System.Drawing.Size(94, 35);

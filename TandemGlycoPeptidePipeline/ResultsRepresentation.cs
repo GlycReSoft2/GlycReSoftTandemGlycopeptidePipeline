@@ -38,6 +38,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             TypeConverterFactory.AddConverter<IonFragment[]>(new IonFragmentConverter());
             this.MatchedPredictions = csv.GetRecords<GlycopeptidePrediction>().ToList();
             this.SourceFile = resultsFilePath;
+            textReader.Close();
         }
 
         public ResultsRepresentation(StreamReader reader, String fileName)
@@ -48,6 +49,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             TypeConverterFactory.AddConverter<IonFragment[]>(new IonFragmentConverter());
             this.MatchedPredictions = csv.GetRecords<GlycopeptidePrediction>().ToList();
             this.SourceFile = fileName;
+            reader.Close();
         }
 
         /// <summary>

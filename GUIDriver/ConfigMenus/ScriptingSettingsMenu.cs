@@ -30,13 +30,11 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 
         private void OkayButton_Click(object sender, EventArgs e)
         {
-            ScriptingSettings settings = new ScriptingSettings();
-            settings.PythonInterpreterPath = this.PythonExecutablePathTextBox.Text;
-            settings.RscriptInterpreterPath = this.RscriptExecutablePathTextBox.Text;
-            ConfigurationManager.Scripting = settings;
+            ConfigurationManager.Scripting.PythonInterpreterPath = this.PythonExecutablePathTextBox.Text;
+            ConfigurationManager.Scripting.RscriptInterpreterPath = this.RscriptExecutablePathTextBox.Text;
             try
             {
-                ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, settings);
+                ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
             }
             catch (SettingFileException)
             {
@@ -53,6 +51,9 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
             {
                 scriptingManager.VerifyFileSystemTargets();
                 scriptingManager.InstallPythonDependencies();
+                ConfigurationManager.Scripting.PythonDependenciesInstalled = true;
+                ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
+                MessageBox.Show(ConfigurationManager.Scripting.ToString());
             }
             catch (Exception ex)
             {
@@ -68,6 +69,9 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
             {
                 scriptingManager.VerifyFileSystemTargets();
                 scriptingManager.InstallRDependencies();
+                ConfigurationManager.Scripting.RDependenciesInstalled = true;
+                ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
+                MessageBox.Show(ConfigurationManager.Scripting.ToString());
             }
             catch (ScriptingException ex)
             {

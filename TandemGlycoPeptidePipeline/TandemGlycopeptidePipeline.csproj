@@ -87,7 +87,7 @@
     <Content Include="python\glycresoft_ms2_classification\structure\sequence.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="python\glycresoft_ms2_classification\structure\sequencespace.py">
+    <Content Include="python\glycresoft_ms2_classification\structure\sequence_space.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="python\glycresoft_ms2_classification\structure\stub_glycopeptides.py">

@@ -57,6 +57,12 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             SelectModelComboBox.Items.Add(OPEN_MODEL_FILE_STRING);
             //Set the active item to the functionality label which has no function
             SelectModelComboBox.SelectedItem = SELECT_MODEL_DEFAULT;
+
+
+            if (!(ConfigurationManager.Scripting.RDependenciesInstalled && ConfigurationManager.Scripting.PythonDependenciesInstalled))
+            {
+                MessageBox.Show("Hello, if you have not yet installed the Python and R dependencies, please do so by clicking the Scripting Settings button and configure the menu options there.");
+            }
         }
        
         private void MS1MatchFilePathLoadButton_Click(object sender, EventArgs e)

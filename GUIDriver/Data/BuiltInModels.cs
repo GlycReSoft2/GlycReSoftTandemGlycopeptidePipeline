@@ -15,7 +15,10 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Data
         {
             string path = (Path.Combine(Application.StartupPath, "Data", "Models.xml"));           
             XmlSerializer serializer = new XmlSerializer(typeof(Models));
-            return (Models)serializer.Deserialize(File.Open(path, FileMode.Open, FileAccess.Read));
+            FileStream reader = File.Open(path, FileMode.Open, FileAccess.Read);
+            Models storedData = (Models)serializer.Deserialize(reader);
+            reader.Close();
+            return storedData;
         }
     }
 
