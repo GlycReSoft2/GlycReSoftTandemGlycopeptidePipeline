@@ -143,7 +143,7 @@
       <Project>{6ec79573-c90b-4b48-b28b-cf67995a63ad}</Project>
       <Name>CompositionHypothesis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\GenericForms.cs\GenericForms.csproj">
+    <ProjectReference Include="..\..\GenericForms\GenericForms.csproj">
       <Project>{05be70cb-9bf5-4c16-be39-6cd7b4c19df7}</Project>
       <Name>GenericForms</Name>
     </ProjectReference>
