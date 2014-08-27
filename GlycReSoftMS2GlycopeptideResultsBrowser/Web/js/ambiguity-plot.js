@@ -7,7 +7,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
     scalingUpFn = function(value) {
       return Math.exp(value);
     };
-    ambiguityPlotTemplater = function(scope, seriesData, xAxisTitle, yAxisTitle, tooltipFormatter) {
+    ambiguityPlotTemplater = function(scope, seriesData, xAxisTitle, yAxisTitle) {
       var ambiguityPlotTemplateImpl, infitesimal;
       infitesimal = 1 / (Math.pow(1000, 1000));
       return ambiguityPlotTemplateImpl = {
@@ -52,8 +52,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           height: $window.innerHeight * .8
         },
         tooltip: {
-          formatter: tooltipFormatter,
+          formatter: function() {
+            var contents, point;
+            point = this.point;
+            contents = " MS1 Score: <b>" + point.x + "</b><br/> Mass: <b>" + (scalingUpFn(point.z)) + "</b><br/> MS2 Score: <b>" + point.y + "</b>(ME: <i>" + point.MS2_ScoreMeanError + "</i>)<br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
+            return contents;
+          },
           headerFormat: "<span style=\"color:{series.color}\">●</span> {series.name}</span><br/>",
+          pointFormat: " MS1 Score: <b>{point.x}</b>" + "<br/>Mass: <b>{point.z}</b><br/>MS2 Score: <b>{point.y}</b>(ME: <i>{point.MS2_ScoreMeanError}</i>)<br/> Number of Matches: <b>{series.data.length}</b><br/>",
           positioner: function(boxWidth, boxHeight, point) {
             var ttAnchor;
             ttAnchor = {
@@ -112,7 +118,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           _.forEach(group, function(pred) {
             return pred.MS2_ScoreMeanError = 0;
           });
-          return ionMassMS1Series.push({
+          return notAmbiguous.push({
             data: group,
             name: "MS1/Mass " + id
           });
@@ -211,14 +217,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
       };
     };
     updatePlot = function(predictions, scope, element) {
-      var chart, groupParams, ionSeries, notAmbiguous, plotOptions, tooltipFormatter, xAxisTitle, yAxisTitle, _ref;
+      var chart, groupParams, ionSeries, notAmbiguous, plotOptions, xAxisTitle, yAxisTitle, _ref;
       groupParams = scope.grouping.groupingFnKey;
       console.log("Grouping Parameters: ", groupParams);
       scope.seriesData = groupParams.groupingFn(predictions);
       console.log("Series Data: ", scope.seriesData);
       scope.describedPredictions = [];
       _ref = scope.seriesData, ionSeries = _ref.ionSeries, notAmbiguous = _ref.notAmbiguous;
-      plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle = groupParams.xAxisTitle, yAxisTitle = groupParams.yAxisTitle, tooltipFormatter = groupParams.tooltipFormatter);
+      plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle = groupParams.xAxisTitle, yAxisTitle = groupParams.yAxisTitle);
       console.log(plotOptions);
       chart = element.find(".ambiguity-plot-container");
       return chart.highcharts(plotOptions);
@@ -226,11 +232,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
     return {
       restrict: "AE",
       template: "<div class='amiguity-container'> <div class='plot-grouping-fn-selector-container'> <select class='plot-grouping-fn-selector-box' ng-model='grouping.groupingFnKey' ng-options='key for (key, value) in grouping.groupingsOptions' ng-change='requestPredictionsUpdate()'> </select> </div> <div class='ambiguity-plot-container'></div> <div class='ambiguity-peptide-sequences-container' ng-if='describedPredictions.length > 0'> <div class='ambiguity-peptide-attributes-container clearfix'> <div class='pull-left ambiguity-peptide-attributes'> <p>MS2 Score Range: {{describedMS2Min}} - {{describedMS2Max}}</p> <p>Peptide Region: {{describedPredictions[0].startAA}} - {{describedPredictions[0].endAA}}</p> </div> <div class='pull-left ambiguity-peptide-attributes'> <p>Peptide Sequence: {{describedPredictions[0].Peptide}}</p> <p>Distinct Glycan Count: {{keys(_.groupBy(describedPredictions, 'Glycan')).length}} </div> </div> <table class='table table-striped table-compact ambiguity-peptide-sequences-table'> <tr> <th>Glycopeptide Identifier</th> <th>Peptide Coverage</th> <th># Stub Ions</th> <th>B | Y Ions Coverage (+HexNAc)</th> <th>MS2 Score</th> </tr> <tr ng-repeat='match in describedPredictions | orderBy:[\"MS2_Score\",\"Glycan\",\"numStubs\"]:true'> <td ng-bind-html='match.Glycopeptide_identifier | highlightModifications'></td> <td>{{match.meanCoverage | number:4}}</td> <td>{{match.Stub_ions.length}}</td> <td>{{match.percent_b_ion_coverage * 100|number:1}}%({{match.percent_b_ion_with_HexNAc_coverage * 100|number:1}}%) | {{match.percent_y_ion_coverage * 100|number:1}}%({{match.percent_y_ion_with_HexNAc_coverage * 100|number:1}}%) </td> <td>{{match.MS2_Score}}</td> </tr> </table> </div> </div>",
-      scope: {
-        active: "="
-      },
       link: function(scope, element, attr) {
-        scope._predictions = [];
         scope.describedPredictions = [];
         scope.describedMS2Min = 0;
         scope.describedMS2Max = 0;
@@ -239,22 +241,12 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           "MS1 Score + Mass": {
             groupingFn: ms1MassGroupingFn,
             xAxisTitle: "MS1 Score",
-            yAxisTitle: "MS2 Score",
-            tooltipFormatter: function() {
-              var contents, point;
-              point = this.point;
-              return contents = " MS1 Score: <b>" + point.x + "</b><br/> Mass: <b>" + (scalingUpFn(point.z)) + "</b><br/> MS2 Score: <b>" + point.y + "</b>(ME: <i>" + point.MS2_ScoreMeanError + "</i>)<br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
-            }
+            yAxisTitle: "MS2 Score"
           },
           "Start AA + Length": {
             groupingFn: positionGroupingFn,
             xAxisTitle: "Peptide Start Position",
-            yAxisTitle: "MS2 Score",
-            tooltipFormatter: function() {
-              var contents, point;
-              point = this.point;
-              return contents = " Amino Acid Span: <b>" + point.x + " -> " + (point.x + point.z) + "</b><br/> MS2 Score: <b>" + point.y + "</b><br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
-            }
+            yAxisTitle: "MS2 Score"
           }
         };
         scope._ = _;
@@ -278,8 +270,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
         });
         scope.$on("ambiguityPlot.renderPlot", function(evt, params) {
           console.log("Received", arguments);
-          scope._predictions = params.predictions;
-          return updatePlot(params.predictions, scope, element);
+          return updatePlot(scope.predictions, scope, element);
         });
         return scope.requestPredictionsUpdate = function(opts) {
           if (opts == null) {

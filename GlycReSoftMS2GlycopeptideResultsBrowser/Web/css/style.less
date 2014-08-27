@@ -23,6 +23,7 @@
     max-width: 400px !important;
 }
 
+//For the Filtrex Help Popovers only
 .help-article {
     max-height: 500px !important;
     overflow-y: scroll;
@@ -33,7 +34,7 @@
         }
     }
 }
-
+//
 .matched-ions-cell{
     vertical-align: middle !important;
     margin: 0px !important;
@@ -90,7 +91,7 @@
     background-color: lighten(orange, 40%)
 }
 .c1{
-    background-color: lighten(blue, 40%);
+    background-color: lighten(skyblue, 10%);
 }
 .c2{
     background-color: lighten(green, 60%);
@@ -99,7 +100,7 @@
     background-color: lighten(yellow, 40%);
 }
 .c4{
-    background-color: lighten(red, 40%);
+    background-color: lighten(red, 45%);
 }
 .c5{
     background-color: lighten(white, 60%);
@@ -173,12 +174,6 @@
 //Highlight Modification CSS Options
 .mod-string {
     font-weight: 900;
-    &.css-HexNAc{
-        color: forestgreen;
-    }
-    &.css-Deamidated{
-        color: maroon;
-    }
 }
 
 
@@ -197,4 +192,41 @@
 }
 #tooltip h3, #tooltip div {
     margin: 0;
+}
+
+/*Modal Styles*/
+.modal {
+    display: block;
+}
+.modal-body:before,
+.modal-body:after {
+    display: table;
+    content: " ";
+}
+.modal-header:before,
+.modal-header:after {
+    display: table;
+    content: " ";
+}
+
+table.glycan-composition-frequency-table {
+    text-align: center;
+    td, th {
+        text-align: center;
+        font-size: 11px;
+    }
+    tr td:first-child {
+        font-weight: 900;
+    }
+}
+
+//For the help menu only
+.help-content{
+    padding: 3px;
+    h5{
+        font-weight: 900;
+    }
+    section {
+        margin: 15px;
+    }
 }

@@ -50,6 +50,7 @@ module.exports = function(grunt){
                       'js/vendor/highcharts.js',
                       'js/vendor/highcharts-more.js',
                       'js/vendor/highcharts-exporting.js',
+                      'js/vendor/highcharts-data.js',
 
                       'js/vendor/filtrex.js',
                       'js/vendor/FileSaver.js',
@@ -77,11 +78,14 @@ module.exports = function(grunt){
             },
             jsApp: {
                 src: [
+                      //Controllers and Applications
                       'js/app.js',
                       'js/results-representation.js',
+                      'js/modal.js',
 
                       //Services
                       'js/csv-service.js',
+                      'js/color-service.js',
 
                       //View Directives
                       'js/protein-sequence-view.js',
@@ -92,8 +96,9 @@ module.exports = function(grunt){
                       'js/resizeable.js',
                       'js/save-csv.js',
                       'js/html-popover.js',
+                      'js/help-menu.js',
 
-
+                      //Filters
                       'js/highlight-modifications.js',
                       'js/scientific-notation.js',
 

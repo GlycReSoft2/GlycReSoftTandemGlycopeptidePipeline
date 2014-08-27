@@ -5,3 +5,12 @@ GlycReSoftMSMSGlycopeptideResultsViewApp = angular.module("GlycReSoftMSMSGlycope
     "ngSanitize"
 ])
 
+Array::sum = ->
+    total = 0
+    for i in @
+        total += i
+    total
+
+Array::mean = ->
+    total = @sum()
+    total / @length

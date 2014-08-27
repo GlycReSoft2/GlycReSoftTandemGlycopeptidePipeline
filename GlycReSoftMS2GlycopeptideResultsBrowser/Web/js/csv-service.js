@@ -42,6 +42,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service("csvService", [
       });
       return predictions;
     };
+    console.log(this);
     return $window.csvService = this;
   }
 ]);

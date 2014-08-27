@@ -586,7 +586,7 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   background-color: #ffedcc;
 }
 .c1 {
-  background-color: #ccccff;
+  background-color: #b3e0f2;
 }
 .c2 {
   background-color: #b3ffb3;
@@ -595,7 +595,7 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   background-color: #ffffcc;
 }
 .c4 {
-  background-color: #ffcccc;
+  background-color: #ffe5e5;
 }
 .c5 {
   background-color: #ffffff;
@@ -653,12 +653,6 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 .mod-string {
   font-weight: 900;
 }
-.mod-string.css-HexNAc {
-  color: forestgreen;
-}
-.mod-string.css-Deamidated {
-  color: maroon;
-}
 .protein-sequence-view-container {
   margin-left: 2%;
 }
@@ -673,4 +667,38 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 #tooltip h3,
 #tooltip div {
   margin: 0;
+}
+/*Modal Styles*/
+.modal {
+  display: block;
+}
+.modal-body:before,
+.modal-body:after {
+  display: table;
+  content: " ";
+}
+.modal-header:before,
+.modal-header:after {
+  display: table;
+  content: " ";
+}
+table.glycan-composition-frequency-table {
+  text-align: center;
+}
+table.glycan-composition-frequency-table td,
+table.glycan-composition-frequency-table th {
+  text-align: center;
+  font-size: 11px;
+}
+table.glycan-composition-frequency-table tr td:first-child {
+  font-weight: 900;
+}
+.help-content {
+  padding: 3px;
+}
+.help-content h5 {
+  font-weight: 900;
+}
+.help-content section {
+  margin: 15px;
 }

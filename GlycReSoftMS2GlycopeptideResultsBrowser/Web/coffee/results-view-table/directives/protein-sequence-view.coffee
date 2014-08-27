@@ -16,12 +16,12 @@
 # jQuery UI is attached to angular.element, and instantiating jQuery again in noConflictMode
 # is missing the extensions
 angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSequenceView", ["$window", "$filter",
-    ($window, $filter) ->
+"colorService", "$modal", "$timeout", ($window, $filter, colorService, $modal, $timeout) ->
+        $window.modal = $modal
         orderBy = $filter("orderBy")
+        $window.orderBy = orderBy
         highlightModifications = $filter("highlightModifications")
 
-        _colorIter = 0
-        colors = ["blue", "yellow", "red", "purple", "grey"]
         _shapeIter = 0
         shapes = ["diamond", "triangle", "hexagon","wave", "circle"]
 
@@ -109,26 +109,15 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
             PTM: "triangle"
         }
 
-        # This map persists within closure, but may differ
-        # with different orders of examination of the same dataset
-        colorMap = {
-            Peptide: "seagreen"
-            HexNAc: "#CC99FF"
-        }
-
         typeCategoryMap = {
+            "HexNAc": "Glycan"
+
         }
 
         _layerCounter = 0
         _layerIncrement = 15
         heightLayerMap = {
         }
-
-        nextColor = ->
-            color = colors[_colorIter++]
-            if _colorIter >= colors.length
-                _colorIter = 0
-            return color
 
         generateConfig = ($window) ->
             configuration = {
@@ -154,7 +143,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 dasSources: null,
                 horizontalGrid: false,
                 pixelsDivision: 50,
-                sizeY: $window.innerHeight,
+                sizeY: $window.innerHeight * 3.0,
                 sizeX: $window.innerWidth * .95,
                 dasReference: null,
                 sizeYRows: 260,
@@ -176,13 +165,116 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
 
         # Given a set of modifications at the same site, return the best score
         # for that site.
-        getBestScoresForModification = (modifications) ->
+        getBestScoresForModification = (modifications, features) ->
             foldedMods = _.groupBy(modifications, "featureId")
             topMods = []
+
             for modId, mod of foldedMods
-                topMods.push(orderBy(mod, "evidenceCode", true)[0])
+                ordMods = (orderBy(mod, ((obj) -> obj._obj.MS2_Score), true))
+                bestMod = ordMods[0]
+
+                colocatingFeatures = fragmentsSurroundingPosition(bestMod.featureStart, features)
+                [frequencyOfModification, containingFragments] = fragmentsContainingModification(bestMod, colocatingFeatures)
+
+                bestMod.statistics = {
+                    meanScore: _.pluck(ordMods, ((obj)-> obj._obj.MS2_Score)).mean()
+                    frequency: frequencyOfModification
+                }
+                bestMod.additionalTooltipContent =
+                    "<br/>Mean Score: #{bestMod.statistics.meanScore.toFixed(3)}
+                    <br/>Frequency of Feature: #{(bestMod.statistics.frequency * 100).toFixed(2)}%"
+
+                if typeCategoryMap[bestMod.featureTypeLabel] is "Glycan"
+                    makeGlycanCompositionContent(bestMod, containingFragments)
+
+
+
+
+
+                topMods.push(bestMod)
             return topMods
 
+        fragmentsSurroundingPosition = (position, fragments) ->
+            fragRanges = _.groupBy(fragments, ((frag) -> [frag.featureStart, frag.featureEnd]))
+            results = []
+            for range, fragments of fragRanges
+                [start, end] = range.split(',')
+                if position >= start and position <= end
+                    results = results.concat(fragments)
+            return results
+
+        fragmentsContainingModification = (modification, fragments) ->
+            count = 0
+            containingFragments = []
+            for frag in fragments
+                if modification.featureId in frag.modifications
+                    count++
+                    containingFragments.push frag
+            return [count/fragments.length, containingFragments]
+
+
+        makeGlycanCompositionContent = (bestMod, containingFragments) ->
+            bestMod.hasModalContent = true
+            glycanMap = {}
+            for frag in containingFragments
+                if not (frag._obj.Glycan of glycanMap)
+                    glycanMap[frag._obj.Glycan] = 0
+                glycanMap[frag._obj.Glycan]++
+            bestMod.statistics.glycanMap = {}
+
+            bestMod.additionalTooltipContent += "</br><b>Click to see Glycan Composition distribution</b>"
+
+            glycanCompositionContent = "<div class='frequency-plot-container'></div>
+            <table class='table table-striped table-compact centered glycan-composition-frequency-table'>
+            <tr>
+                <th>Glycan Composition</th><th>Frequency(%)</th>
+            </tr>"
+            for composition, frequency of glycanMap
+                frequency = (frequency/containingFragments.length)
+                bestMod.statistics.glycanMap[composition] = frequency
+                glycanCompositionContent += "<tr>
+                    <td>#{composition}</td><td>#{(frequency * 100).toFixed(2)}</td>
+                </tr>"
+            glycanCompositionContent += "</table>"
+            bestMod.modalOptions = {
+                title: "Glycan Composition: " + bestMod.featureId
+                summary: glycanCompositionContent
+                items: []
+                postLoadFn: () ->
+                    # Create the frequency histogram of glycan compositions at this site
+                    angular.element('.frequency-plot-container').highcharts({
+                        data: {
+                            table: angular.element('.glycan-composition-frequency-table')[0]
+                        },
+                        chart: {
+                            type: 'column'
+                        }
+
+                        title: {
+                            text: 'Glycan Composition Frequency'
+                        },
+                        yAxis: {
+                            allowDecimals: false,
+                            title: {
+                                text: 'Frequency (%)'
+                            }
+                        }
+                        xAxis: {
+                            type: 'category',
+                            labels: {
+                                rotation: -45,
+                            }
+                        },
+                        tooltip: {
+                            pointFormat: '<b>{point.y}%</b> Frequency'
+                        }
+                        legend: {
+                            enabled: false
+                        }
+                    })
+                    console.log window.TESTX, "charted"
+                    console.log $('.frequency-plot-container')
+            }
 
         parseGlycopeptideIdentifierToModificationsArray = (glycoform, startSite) ->
             glycopeptide = glycoform.Glycopeptide_identifier
@@ -202,10 +294,11 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                     if feature.type is "circle"
                         feature.r /= 2
 
-                    if label not of colorMap
-                        colorMap[label] = nextColor()
-                        console.log(label, colorMap[label])
-                    feature.fill = colorMap[label]
+                    #if label not of colorMap
+                    #    colorMap[label] = nextColor()
+                    #    console.log(label, colorMap[label])
+                    #feature.fill = colorMap[label]
+                    feature.fill = colorService.getColor(label)
 
                     feature.featureStart = index + startSite
                     feature.featureEnd = index + startSite
@@ -225,6 +318,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                         heightLayerMap[label] = _layerCounter
 
                     feature.cy = 140 - ((feature.r) + heightLayerMap[label])
+
+                    feature._obj = glycoform
 
                     modifications.push feature
                 else
@@ -256,8 +351,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 for glycoform in frag
                     feature = _.cloneDeep featureTemplate
                     feature.type = shapeMap.Peptide
-                    feature.fill = colorMap.Peptide
-                    feature.stroke = colorMap.Peptide
+                    feature.fill = colorService.getColor("Peptide")
+                    feature.stroke = colorService.getColor("Peptide")
                     feature.featureStart = glycoform.startAA
                     feature.featureEnd = glycoform.endAA
                     feature.text = glycoform.Glycopeptide_identifier
@@ -276,15 +371,15 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                     feature.modifications = _.pluck(glycoformModifications, "featureId")
                     feature._obj = glycoform
 
-                    # Wait until after the modifications have been processed and registered in colorMap
-                    feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, colorMap)
+                    # Wait until after the modifications have been processed and registered in colorService
+                    feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, false)
 
                     featuresArray.push feature
 
                     depth++
 
             foldedMods = _.pluck(_.groupBy(modifications, "featureId"), (obj) -> obj[0])
-            topMods = getBestScoresForModification(modifications)
+            topMods = getBestScoresForModification(modifications, featuresArray)
             featuresArray = featuresArray.concat(topMods)
 
             return featuresArray
@@ -318,6 +413,28 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 id = featureShape.featureId
                 feature =  _.find(scope.featureViewerConfig.featuresArray, {featureId: id})
                 console.log(id, feature)
+                if(feature.hasModalContent)
+                    window.modalInstance= $modal.open({
+                            templateUrl: "myModalContent.html"
+                            scope: scope
+                            controller: ModalInstanceCtrl
+                            size: 'lg'
+                            resolve: {
+                                title: ()->
+                                    return feature.modalOptions.title
+                                items: () ->
+                                    return feature.modalOptions.items
+                                summary: () ->
+                                    return feature.modalOptions.summary
+                                postLoadFn: () -> feature.modalOptions.postLoadFn
+                            }
+                        })
+
+                    modalInstance.opened.then (evt) ->
+                        $timeout(feature.modalOptions.postLoadFn, 1000)
+                if(feature.featureTypeLabel == "glycopeptide_match")
+                    scope.$emit("selectedPredictions", {selectedPredictions: [feature._obj]})
+
             scope.featureViewerInstance.onFeatureOn (featureShape) ->
                 id = featureShape.featureId
                 feature =  _.find(scope.featureViewerConfig.featuresArray, {featureId: id})
@@ -332,6 +449,11 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                     for mod in feature.modifications
                         modId = "uniprotFeaturePainter_" + mod
                         scope.featureViewerInstance.raphael.getById(modId).transform("s1").attr("fill-opacity", 0.5)
+
+            angular.element("#protein-sequence-view-container-div").css({
+                    height: $window.innerHeight,
+                    "overflow-y": "scroll"
+                })
 
 
 

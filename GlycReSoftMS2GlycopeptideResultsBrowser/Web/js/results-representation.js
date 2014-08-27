@@ -1,3 +1,5 @@
+var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
 (function() {
   var activateFn, applyFiltrex, filterByFiltrex, focusRow, helpText, setGroupBy, updateFiltrexDebounce, watchExternalDataChanges;
   setGroupBy = function(grouping, predictions) {
@@ -48,6 +50,7 @@
       return groupedResults;
     } catch (_error) {
       ex = _error;
+      console.log("in catch");
       console.log(ex, $scope.filtrexError);
       if (expr.length > 0) {
         $scope.filtrexError = true;
@@ -187,15 +190,20 @@
         }
       };
       $scope.buildHeaderSubstituitionDictionary = function() {
-        var column, dictionary, _i, _len, _ref;
+        var BLACK_LIST, column, dictionary, _i, _len, _ref, _ref1;
         dictionary = {};
         dictionary.NAME_MAP = [];
+        BLACK_LIST = ["Peptide Span"];
         _ref = $scope.gridOptions.columnDefs;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           column = _ref[_i];
-          dictionary.NAME_MAP.push(column.displayName);
-          dictionary[column.displayName.toLowerCase()] = column.field;
+          if (!(_ref1 = column.displayName, __indexOf.call(BLACK_LIST, _ref1) >= 0)) {
+            dictionary.NAME_MAP.push(column.displayName);
+            dictionary[column.displayName.toLowerCase()] = column.field;
+          }
         }
+        dictionary["Start AA".toLowerCase()] = "startAA";
+        dictionary.NAME_MAP.push("Start AA");
         dictionary["End AA".toLowerCase()] = "endAA";
         dictionary.NAME_MAP.push("End AA");
         dictionary["AA Length".toLowerCase()] = "peptideLens";
@@ -240,6 +248,12 @@
             width: 130,
             pinned: true,
             displayName: "Observed Mass",
+            cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+          }, {
+            field: 'vol',
+            width: 100,
+            pinned: true,
+            displayName: "Volume",
             cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
           }, {
             field: 'ppm_error',

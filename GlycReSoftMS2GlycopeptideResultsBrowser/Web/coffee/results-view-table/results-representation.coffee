@@ -41,6 +41,7 @@ do (()->
             return groupedResults
             #console.log("Complete")
         catch ex
+            console.log "in catch"
             console.log(ex, $scope.filtrexError)
             $scope.filtrexError = true if expr.length > 0
             if expr.length is 0
@@ -96,7 +97,7 @@ do (()->
     }
 
     angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").controller(
-        "ClassifierResultsTableCtrl", [ "$scope", "$window", '$filter', 'csvService'
+        "ClassifierResultsTableCtrl", [ "$scope", "$window", '$filter', 'csvService',
         ($scope, $window, $filter, csvService) ->
             orderBy = $filter("orderBy")
             $scope.predictions = []
@@ -144,9 +145,13 @@ do (()->
             $scope.buildHeaderSubstituitionDictionary = ->
                 dictionary = {}
                 dictionary.NAME_MAP = []
+                BLACK_LIST = ["Peptide Span"]
                 for column in $scope.gridOptions.columnDefs
-                    dictionary.NAME_MAP.push column.displayName
-                    dictionary[column.displayName.toLowerCase()] = column.field
+                    if not (column.displayName in BLACK_LIST)
+                        dictionary.NAME_MAP.push column.displayName
+                        dictionary[column.displayName.toLowerCase()] = column.field
+                dictionary["Start AA".toLowerCase()] = "startAA"
+                dictionary.NAME_MAP.push "Start AA"
                 dictionary["End AA".toLowerCase()] = "endAA"
                 dictionary.NAME_MAP.push "End AA"
                 dictionary["AA Length".toLowerCase()] = "peptideLens"
@@ -196,6 +201,13 @@ do (()->
                         width:130
                         pinned: true
                         displayName:"Observed Mass"
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                    }
+                    {
+                        field:'vol'
+                        width:100
+                        pinned: true
+                        displayName:"Volume"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
                     }
                     {

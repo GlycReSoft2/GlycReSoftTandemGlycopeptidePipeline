@@ -1323,6 +1323,9 @@ Biojs.FeatureViewer = Biojs.extend(
                         " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
                         "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
                         "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
+                    if(obj.additionalTooltipContent !== undefined){//MODIFIED JK
+                        tooltip += obj.additionalTooltipContent
+                    }
                     var myFeatureObj = myself._getElementWithinTarget("uniprotFeaturePainter_" + obj.featureId);
                     //This one works fine: xph.tooltip.v0.7b
                     //myFeatureObj.tooltip({text: tooltip});

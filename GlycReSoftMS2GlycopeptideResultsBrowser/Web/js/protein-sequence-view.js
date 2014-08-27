@@ -1,10 +1,12 @@
+var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
 angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSequenceView", [
-  "$window", "$filter", function($window, $filter) {
-    var colorMap, colors, featureTemplate, generateConfig, getBestScoresForModification, heightLayerMap, highlightModifications, legendKeyTemplate, nextColor, orderBy, parseGlycopeptideIdentifierToModificationsArray, shapeMap, shapes, transformFeatuersToLegend, transformPredictionGroupsToFeatures, typeCategoryMap, updateView, _colorIter, _layerCounter, _layerIncrement, _shapeIter;
+  "$window", "$filter", "colorService", "$modal", "$timeout", function($window, $filter, colorService, $modal, $timeout) {
+    var featureTemplate, fragmentsContainingModification, fragmentsSurroundingPosition, generateConfig, getBestScoresForModification, heightLayerMap, highlightModifications, legendKeyTemplate, makeGlycanCompositionContent, orderBy, parseGlycopeptideIdentifierToModificationsArray, shapeMap, shapes, transformFeatuersToLegend, transformPredictionGroupsToFeatures, typeCategoryMap, updateView, _layerCounter, _layerIncrement, _shapeIter;
+    $window.modal = $modal;
     orderBy = $filter("orderBy");
+    $window.orderBy = orderBy;
     highlightModifications = $filter("highlightModifications");
-    _colorIter = 0;
-    colors = ["blue", "yellow", "red", "purple", "grey"];
     _shapeIter = 0;
     shapes = ["diamond", "triangle", "hexagon", "wave", "circle"];
     featureTemplate = {
@@ -84,22 +86,12 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
       HexNAc: "circle",
       PTM: "triangle"
     };
-    colorMap = {
-      Peptide: "seagreen",
-      HexNAc: "#CC99FF"
+    typeCategoryMap = {
+      "HexNAc": "Glycan"
     };
-    typeCategoryMap = {};
     _layerCounter = 0;
     _layerIncrement = 15;
     heightLayerMap = {};
-    nextColor = function() {
-      var color;
-      color = colors[_colorIter++];
-      if (_colorIter >= colors.length) {
-        _colorIter = 0;
-      }
-      return color;
-    };
     generateConfig = function($window) {
       var configuration;
       configuration = {
@@ -125,7 +117,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
         dasSources: null,
         horizontalGrid: false,
         pixelsDivision: 50,
-        sizeY: $window.innerHeight,
+        sizeY: $window.innerHeight * 3.0,
         sizeX: $window.innerWidth * .95,
         dasReference: null,
         sizeYRows: 260,
@@ -145,15 +137,119 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
     transformFeatuersToLegend = function(featuresArray) {
       return [];
     };
-    getBestScoresForModification = function(modifications) {
-      var foldedMods, mod, modId, topMods;
+    getBestScoresForModification = function(modifications, features) {
+      var bestMod, colocatingFeatures, containingFragments, foldedMods, frequencyOfModification, mod, modId, ordMods, topMods, _ref;
       foldedMods = _.groupBy(modifications, "featureId");
       topMods = [];
       for (modId in foldedMods) {
         mod = foldedMods[modId];
-        topMods.push(orderBy(mod, "evidenceCode", true)[0]);
+        ordMods = orderBy(mod, (function(obj) {
+          return obj._obj.MS2_Score;
+        }), true);
+        bestMod = ordMods[0];
+        colocatingFeatures = fragmentsSurroundingPosition(bestMod.featureStart, features);
+        _ref = fragmentsContainingModification(bestMod, colocatingFeatures), frequencyOfModification = _ref[0], containingFragments = _ref[1];
+        bestMod.statistics = {
+          meanScore: _.pluck(ordMods, (function(obj) {
+            return obj._obj.MS2_Score;
+          })).mean(),
+          frequency: frequencyOfModification
+        };
+        bestMod.additionalTooltipContent = "<br/>Mean Score: " + (bestMod.statistics.meanScore.toFixed(3)) + " <br/>Frequency of Feature: " + ((bestMod.statistics.frequency * 100).toFixed(2)) + "%";
+        if (typeCategoryMap[bestMod.featureTypeLabel] === "Glycan") {
+          makeGlycanCompositionContent(bestMod, containingFragments);
+        }
+        topMods.push(bestMod);
       }
       return topMods;
+    };
+    fragmentsSurroundingPosition = function(position, fragments) {
+      var end, fragRanges, range, results, start, _ref;
+      fragRanges = _.groupBy(fragments, (function(frag) {
+        return [frag.featureStart, frag.featureEnd];
+      }));
+      results = [];
+      for (range in fragRanges) {
+        fragments = fragRanges[range];
+        _ref = range.split(','), start = _ref[0], end = _ref[1];
+        if (position >= start && position <= end) {
+          results = results.concat(fragments);
+        }
+      }
+      return results;
+    };
+    fragmentsContainingModification = function(modification, fragments) {
+      var containingFragments, count, frag, _i, _len, _ref;
+      count = 0;
+      containingFragments = [];
+      for (_i = 0, _len = fragments.length; _i < _len; _i++) {
+        frag = fragments[_i];
+        if (_ref = modification.featureId, __indexOf.call(frag.modifications, _ref) >= 0) {
+          count++;
+          containingFragments.push(frag);
+        }
+      }
+      return [count / fragments.length, containingFragments];
+    };
+    makeGlycanCompositionContent = function(bestMod, containingFragments) {
+      var composition, frag, frequency, glycanCompositionContent, glycanMap, _i, _len;
+      bestMod.hasModalContent = true;
+      glycanMap = {};
+      for (_i = 0, _len = containingFragments.length; _i < _len; _i++) {
+        frag = containingFragments[_i];
+        if (!(frag._obj.Glycan in glycanMap)) {
+          glycanMap[frag._obj.Glycan] = 0;
+        }
+        glycanMap[frag._obj.Glycan]++;
+      }
+      bestMod.statistics.glycanMap = {};
+      bestMod.additionalTooltipContent += "</br><b>Click to see Glycan Composition distribution</b>";
+      glycanCompositionContent = "<div class='frequency-plot-container'></div> <table class='table table-striped table-compact centered glycan-composition-frequency-table'> <tr> <th>Glycan Composition</th><th>Frequency(%)</th> </tr>";
+      for (composition in glycanMap) {
+        frequency = glycanMap[composition];
+        frequency = frequency / containingFragments.length;
+        bestMod.statistics.glycanMap[composition] = frequency;
+        glycanCompositionContent += "<tr> <td>" + composition + "</td><td>" + ((frequency * 100).toFixed(2)) + "</td> </tr>";
+      }
+      glycanCompositionContent += "</table>";
+      return bestMod.modalOptions = {
+        title: "Glycan Composition: " + bestMod.featureId,
+        summary: glycanCompositionContent,
+        items: [],
+        postLoadFn: function() {
+          angular.element('.frequency-plot-container').highcharts({
+            data: {
+              table: angular.element('.glycan-composition-frequency-table')[0]
+            },
+            chart: {
+              type: 'column'
+            },
+            title: {
+              text: 'Glycan Composition Frequency'
+            },
+            yAxis: {
+              allowDecimals: false,
+              title: {
+                text: 'Frequency (%)'
+              }
+            },
+            xAxis: {
+              type: 'category',
+              labels: {
+                rotation: -45
+              }
+            },
+            tooltip: {
+              pointFormat: '<b>{point.y}%</b> Frequency'
+            },
+            legend: {
+              enabled: false
+            }
+          });
+          console.log(window.TESTX, "charted");
+          return console.log($('.frequency-plot-container'));
+        }
+      };
     };
     parseGlycopeptideIdentifierToModificationsArray = function(glycoform, startSite) {
       var feature, frag, fragments, glycopeptide, index, label, modifications, regex, _i, _len;
@@ -173,11 +269,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           if (feature.type === "circle") {
             feature.r /= 2;
           }
-          if (!(label in colorMap)) {
-            colorMap[label] = nextColor();
-            console.log(label, colorMap[label]);
-          }
-          feature.fill = colorMap[label];
+          feature.fill = colorService.getColor(label);
           feature.featureStart = index + startSite;
           feature.featureEnd = index + startSite;
           feature.typeLabel = "";
@@ -192,6 +284,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
             heightLayerMap[label] = _layerCounter;
           }
           feature.cy = 140 - (feature.r + heightLayerMap[label]);
+          feature._obj = glycoform;
           modifications.push(feature);
         } else {
           index += frag.length;
@@ -220,8 +313,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           glycoform = frag[_j];
           feature = _.cloneDeep(featureTemplate);
           feature.type = shapeMap.Peptide;
-          feature.fill = colorMap.Peptide;
-          feature.stroke = colorMap.Peptide;
+          feature.fill = colorService.getColor("Peptide");
+          feature.stroke = colorService.getColor("Peptide");
           feature.featureStart = glycoform.startAA;
           feature.featureEnd = glycoform.endAA;
           feature.text = glycoform.Glycopeptide_identifier;
@@ -236,7 +329,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           modifications = modifications.concat(glycoformModifications);
           feature.modifications = _.pluck(glycoformModifications, "featureId");
           feature._obj = glycoform;
-          feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, colorMap);
+          feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, false);
           featuresArray.push(feature);
           depth++;
         }
@@ -244,7 +337,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
       foldedMods = _.pluck(_.groupBy(modifications, "featureId"), function(obj) {
         return obj[0];
       });
-      topMods = getBestScoresForModification(modifications);
+      topMods = getBestScoresForModification(modifications, featuresArray);
       featuresArray = featuresArray.concat(topMods);
       return featuresArray;
     };
@@ -276,7 +369,37 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
         feature = _.find(scope.featureViewerConfig.featuresArray, {
           featureId: id
         });
-        return console.log(id, feature);
+        console.log(id, feature);
+        if (feature.hasModalContent) {
+          window.modalInstance = $modal.open({
+            templateUrl: "myModalContent.html",
+            scope: scope,
+            controller: ModalInstanceCtrl,
+            size: 'lg',
+            resolve: {
+              title: function() {
+                return feature.modalOptions.title;
+              },
+              items: function() {
+                return feature.modalOptions.items;
+              },
+              summary: function() {
+                return feature.modalOptions.summary;
+              },
+              postLoadFn: function() {
+                return feature.modalOptions.postLoadFn;
+              }
+            }
+          });
+          modalInstance.opened.then(function(evt) {
+            return $timeout(feature.modalOptions.postLoadFn, 1000);
+          });
+        }
+        if (feature.featureTypeLabel === "glycopeptide_match") {
+          return scope.$emit("selectedPredictions", {
+            selectedPredictions: [feature._obj]
+          });
+        }
       });
       scope.featureViewerInstance.onFeatureOn(function(featureShape) {
         var feature, id, mod, modId, _i, _len, _ref, _results;
@@ -295,7 +418,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           return _results;
         }
       });
-      return scope.featureViewerInstance.onFeatureOff(function(featureShape) {
+      scope.featureViewerInstance.onFeatureOff(function(featureShape) {
         var feature, id, mod, modId, _i, _len, _ref, _results;
         id = featureShape.featureId;
         feature = _.find(scope.featureViewerConfig.featuresArray, {
@@ -311,6 +434,10 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           }
           return _results;
         }
+      });
+      return angular.element("#protein-sequence-view-container-div").css({
+        height: $window.innerHeight,
+        "overflow-y": "scroll"
       });
     };
     return {

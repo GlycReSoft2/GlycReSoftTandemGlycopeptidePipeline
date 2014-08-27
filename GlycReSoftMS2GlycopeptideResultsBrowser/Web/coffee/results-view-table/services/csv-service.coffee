@@ -49,6 +49,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
         )
         return predictions
 
+    console.log(@)
     $window.csvService = this
 ]
 

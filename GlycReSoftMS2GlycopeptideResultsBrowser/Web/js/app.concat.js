@@ -1,7 +1,25 @@
 var GlycReSoftMSMSGlycopeptideResultsViewApp;
 
 GlycReSoftMSMSGlycopeptideResultsViewApp = angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp", ["ui.bootstrap", "ngGrid", "ngSanitize"]);
+
+Array.prototype.sum = function() {
+  var i, total, _i, _len;
+  total = 0;
+  for (_i = 0, _len = this.length; _i < _len; _i++) {
+    i = this[_i];
+    total += i;
+  }
+  return total;
+};
+
+Array.prototype.mean = function() {
+  var total;
+  total = this.sum();
+  return total / this.length;
+};
 ;
+var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
 (function() {
   var activateFn, applyFiltrex, filterByFiltrex, focusRow, helpText, setGroupBy, updateFiltrexDebounce, watchExternalDataChanges;
   setGroupBy = function(grouping, predictions) {
@@ -52,6 +70,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp = angular.module("GlycReSoftMSMSGlycope
       return groupedResults;
     } catch (_error) {
       ex = _error;
+      console.log("in catch");
       console.log(ex, $scope.filtrexError);
       if (expr.length > 0) {
         $scope.filtrexError = true;
@@ -191,15 +210,20 @@ GlycReSoftMSMSGlycopeptideResultsViewApp = angular.module("GlycReSoftMSMSGlycope
         }
       };
       $scope.buildHeaderSubstituitionDictionary = function() {
-        var column, dictionary, _i, _len, _ref;
+        var BLACK_LIST, column, dictionary, _i, _len, _ref, _ref1;
         dictionary = {};
         dictionary.NAME_MAP = [];
+        BLACK_LIST = ["Peptide Span"];
         _ref = $scope.gridOptions.columnDefs;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           column = _ref[_i];
-          dictionary.NAME_MAP.push(column.displayName);
-          dictionary[column.displayName.toLowerCase()] = column.field;
+          if (!(_ref1 = column.displayName, __indexOf.call(BLACK_LIST, _ref1) >= 0)) {
+            dictionary.NAME_MAP.push(column.displayName);
+            dictionary[column.displayName.toLowerCase()] = column.field;
+          }
         }
+        dictionary["Start AA".toLowerCase()] = "startAA";
+        dictionary.NAME_MAP.push("Start AA");
         dictionary["End AA".toLowerCase()] = "endAA";
         dictionary.NAME_MAP.push("End AA");
         dictionary["AA Length".toLowerCase()] = "peptideLens";
@@ -244,6 +268,12 @@ GlycReSoftMSMSGlycopeptideResultsViewApp = angular.module("GlycReSoftMSMSGlycope
             width: 130,
             pinned: true,
             displayName: "Observed Mass",
+            cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+          }, {
+            field: 'vol',
+            width: 100,
+            pinned: true,
+            displayName: "Volume",
             cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
           }, {
             field: 'ppm_error',
@@ -324,6 +354,22 @@ GlycReSoftMSMSGlycopeptideResultsViewApp = angular.module("GlycReSoftMSMSGlycope
   ]);
 })();
 ;
+var ModalInstanceCtrl;
+
+ModalInstanceCtrl = function($scope, $modalInstance, title, items, summary, postLoadFn) {
+  $scope.title = title;
+  $scope.items = items;
+  $scope.summary = summary;
+  $scope.postLoadFn = postLoadFn;
+  $scope.ok = function() {
+    console.log($scope);
+    return $modalInstance.close(true);
+  };
+  return $scope.cancel = function() {
+    return $modalInstance.dismiss("cancel");
+  };
+};
+;
 GlycReSoftMSMSGlycopeptideResultsViewApp.service("csvService", [
   "$window", function($window) {
     this.serializedFields = ["Oxonium_ions", "Stub_ions", "bare_b_ions", "bare_y_ions", "b_ion_coverage", "y_ion_coverage", "b_ions_with_HexNAc", "y_ions_with_HexNAc", "startAA", "endAA", "vol", "numOxIons", "numStubs", "bestCoverage", "meanCoverage", "percentUncovered", "peptideLens", "MS1_Score", "MS2_Score", "Obs_Mass", "Calc_mass", 'ppm_error', 'abs_ppm_error'];
@@ -368,17 +414,46 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service("csvService", [
       });
       return predictions;
     };
+    console.log(this);
     return $window.csvService = this;
   }
 ]);
 ;
+angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").service("colorService", [
+  function() {
+    this.colors = ["blue", "rgb(228, 211, 84)", "red", "purple", "grey", "black", "green", "orange", "brown"];
+    this._colorIter = 0;
+    this.colorMap = {
+      Peptide: "seagreen",
+      HexNAc: "#CC99FF"
+    };
+    this._nextColor = function() {
+      var color;
+      color = this.colors[this._colorIter++];
+      if (this._colorIter >= this.colors.length) {
+        this._colorIter = 0;
+      }
+      return color;
+    };
+    this.getColor = function(label) {
+      if (!(label in this.colorMap)) {
+        this.colorMap[label] = this._nextColor();
+      }
+      return this.colorMap[label];
+    };
+    return console.log(this);
+  }
+]);
+;
+var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
 angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSequenceView", [
-  "$window", "$filter", function($window, $filter) {
-    var colorMap, colors, featureTemplate, generateConfig, getBestScoresForModification, heightLayerMap, highlightModifications, legendKeyTemplate, nextColor, orderBy, parseGlycopeptideIdentifierToModificationsArray, shapeMap, shapes, transformFeatuersToLegend, transformPredictionGroupsToFeatures, typeCategoryMap, updateView, _colorIter, _layerCounter, _layerIncrement, _shapeIter;
+  "$window", "$filter", "colorService", "$modal", "$timeout", function($window, $filter, colorService, $modal, $timeout) {
+    var featureTemplate, fragmentsContainingModification, fragmentsSurroundingPosition, generateConfig, getBestScoresForModification, heightLayerMap, highlightModifications, legendKeyTemplate, makeGlycanCompositionContent, orderBy, parseGlycopeptideIdentifierToModificationsArray, shapeMap, shapes, transformFeatuersToLegend, transformPredictionGroupsToFeatures, typeCategoryMap, updateView, _layerCounter, _layerIncrement, _shapeIter;
+    $window.modal = $modal;
     orderBy = $filter("orderBy");
+    $window.orderBy = orderBy;
     highlightModifications = $filter("highlightModifications");
-    _colorIter = 0;
-    colors = ["blue", "yellow", "red", "purple", "grey"];
     _shapeIter = 0;
     shapes = ["diamond", "triangle", "hexagon", "wave", "circle"];
     featureTemplate = {
@@ -458,22 +533,12 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
       HexNAc: "circle",
       PTM: "triangle"
     };
-    colorMap = {
-      Peptide: "seagreen",
-      HexNAc: "#CC99FF"
+    typeCategoryMap = {
+      "HexNAc": "Glycan"
     };
-    typeCategoryMap = {};
     _layerCounter = 0;
     _layerIncrement = 15;
     heightLayerMap = {};
-    nextColor = function() {
-      var color;
-      color = colors[_colorIter++];
-      if (_colorIter >= colors.length) {
-        _colorIter = 0;
-      }
-      return color;
-    };
     generateConfig = function($window) {
       var configuration;
       configuration = {
@@ -499,7 +564,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
         dasSources: null,
         horizontalGrid: false,
         pixelsDivision: 50,
-        sizeY: $window.innerHeight,
+        sizeY: $window.innerHeight * 3.0,
         sizeX: $window.innerWidth * .95,
         dasReference: null,
         sizeYRows: 260,
@@ -519,15 +584,119 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
     transformFeatuersToLegend = function(featuresArray) {
       return [];
     };
-    getBestScoresForModification = function(modifications) {
-      var foldedMods, mod, modId, topMods;
+    getBestScoresForModification = function(modifications, features) {
+      var bestMod, colocatingFeatures, containingFragments, foldedMods, frequencyOfModification, mod, modId, ordMods, topMods, _ref;
       foldedMods = _.groupBy(modifications, "featureId");
       topMods = [];
       for (modId in foldedMods) {
         mod = foldedMods[modId];
-        topMods.push(orderBy(mod, "evidenceCode", true)[0]);
+        ordMods = orderBy(mod, (function(obj) {
+          return obj._obj.MS2_Score;
+        }), true);
+        bestMod = ordMods[0];
+        colocatingFeatures = fragmentsSurroundingPosition(bestMod.featureStart, features);
+        _ref = fragmentsContainingModification(bestMod, colocatingFeatures), frequencyOfModification = _ref[0], containingFragments = _ref[1];
+        bestMod.statistics = {
+          meanScore: _.pluck(ordMods, (function(obj) {
+            return obj._obj.MS2_Score;
+          })).mean(),
+          frequency: frequencyOfModification
+        };
+        bestMod.additionalTooltipContent = "<br/>Mean Score: " + (bestMod.statistics.meanScore.toFixed(3)) + " <br/>Frequency of Feature: " + ((bestMod.statistics.frequency * 100).toFixed(2)) + "%";
+        if (typeCategoryMap[bestMod.featureTypeLabel] === "Glycan") {
+          makeGlycanCompositionContent(bestMod, containingFragments);
+        }
+        topMods.push(bestMod);
       }
       return topMods;
+    };
+    fragmentsSurroundingPosition = function(position, fragments) {
+      var end, fragRanges, range, results, start, _ref;
+      fragRanges = _.groupBy(fragments, (function(frag) {
+        return [frag.featureStart, frag.featureEnd];
+      }));
+      results = [];
+      for (range in fragRanges) {
+        fragments = fragRanges[range];
+        _ref = range.split(','), start = _ref[0], end = _ref[1];
+        if (position >= start && position <= end) {
+          results = results.concat(fragments);
+        }
+      }
+      return results;
+    };
+    fragmentsContainingModification = function(modification, fragments) {
+      var containingFragments, count, frag, _i, _len, _ref;
+      count = 0;
+      containingFragments = [];
+      for (_i = 0, _len = fragments.length; _i < _len; _i++) {
+        frag = fragments[_i];
+        if (_ref = modification.featureId, __indexOf.call(frag.modifications, _ref) >= 0) {
+          count++;
+          containingFragments.push(frag);
+        }
+      }
+      return [count / fragments.length, containingFragments];
+    };
+    makeGlycanCompositionContent = function(bestMod, containingFragments) {
+      var composition, frag, frequency, glycanCompositionContent, glycanMap, _i, _len;
+      bestMod.hasModalContent = true;
+      glycanMap = {};
+      for (_i = 0, _len = containingFragments.length; _i < _len; _i++) {
+        frag = containingFragments[_i];
+        if (!(frag._obj.Glycan in glycanMap)) {
+          glycanMap[frag._obj.Glycan] = 0;
+        }
+        glycanMap[frag._obj.Glycan]++;
+      }
+      bestMod.statistics.glycanMap = {};
+      bestMod.additionalTooltipContent += "</br><b>Click to see Glycan Composition distribution</b>";
+      glycanCompositionContent = "<div class='frequency-plot-container'></div> <table class='table table-striped table-compact centered glycan-composition-frequency-table'> <tr> <th>Glycan Composition</th><th>Frequency(%)</th> </tr>";
+      for (composition in glycanMap) {
+        frequency = glycanMap[composition];
+        frequency = frequency / containingFragments.length;
+        bestMod.statistics.glycanMap[composition] = frequency;
+        glycanCompositionContent += "<tr> <td>" + composition + "</td><td>" + ((frequency * 100).toFixed(2)) + "</td> </tr>";
+      }
+      glycanCompositionContent += "</table>";
+      return bestMod.modalOptions = {
+        title: "Glycan Composition: " + bestMod.featureId,
+        summary: glycanCompositionContent,
+        items: [],
+        postLoadFn: function() {
+          angular.element('.frequency-plot-container').highcharts({
+            data: {
+              table: angular.element('.glycan-composition-frequency-table')[0]
+            },
+            chart: {
+              type: 'column'
+            },
+            title: {
+              text: 'Glycan Composition Frequency'
+            },
+            yAxis: {
+              allowDecimals: false,
+              title: {
+                text: 'Frequency (%)'
+              }
+            },
+            xAxis: {
+              type: 'category',
+              labels: {
+                rotation: -45
+              }
+            },
+            tooltip: {
+              pointFormat: '<b>{point.y}%</b> Frequency'
+            },
+            legend: {
+              enabled: false
+            }
+          });
+          console.log(window.TESTX, "charted");
+          return console.log($('.frequency-plot-container'));
+        }
+      };
     };
     parseGlycopeptideIdentifierToModificationsArray = function(glycoform, startSite) {
       var feature, frag, fragments, glycopeptide, index, label, modifications, regex, _i, _len;
@@ -547,11 +716,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           if (feature.type === "circle") {
             feature.r /= 2;
           }
-          if (!(label in colorMap)) {
-            colorMap[label] = nextColor();
-            console.log(label, colorMap[label]);
-          }
-          feature.fill = colorMap[label];
+          feature.fill = colorService.getColor(label);
           feature.featureStart = index + startSite;
           feature.featureEnd = index + startSite;
           feature.typeLabel = "";
@@ -566,6 +731,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
             heightLayerMap[label] = _layerCounter;
           }
           feature.cy = 140 - (feature.r + heightLayerMap[label]);
+          feature._obj = glycoform;
           modifications.push(feature);
         } else {
           index += frag.length;
@@ -594,8 +760,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           glycoform = frag[_j];
           feature = _.cloneDeep(featureTemplate);
           feature.type = shapeMap.Peptide;
-          feature.fill = colorMap.Peptide;
-          feature.stroke = colorMap.Peptide;
+          feature.fill = colorService.getColor("Peptide");
+          feature.stroke = colorService.getColor("Peptide");
           feature.featureStart = glycoform.startAA;
           feature.featureEnd = glycoform.endAA;
           feature.text = glycoform.Glycopeptide_identifier;
@@ -610,7 +776,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           modifications = modifications.concat(glycoformModifications);
           feature.modifications = _.pluck(glycoformModifications, "featureId");
           feature._obj = glycoform;
-          feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, colorMap);
+          feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, false);
           featuresArray.push(feature);
           depth++;
         }
@@ -618,7 +784,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
       foldedMods = _.pluck(_.groupBy(modifications, "featureId"), function(obj) {
         return obj[0];
       });
-      topMods = getBestScoresForModification(modifications);
+      topMods = getBestScoresForModification(modifications, featuresArray);
       featuresArray = featuresArray.concat(topMods);
       return featuresArray;
     };
@@ -650,7 +816,37 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
         feature = _.find(scope.featureViewerConfig.featuresArray, {
           featureId: id
         });
-        return console.log(id, feature);
+        console.log(id, feature);
+        if (feature.hasModalContent) {
+          window.modalInstance = $modal.open({
+            templateUrl: "myModalContent.html",
+            scope: scope,
+            controller: ModalInstanceCtrl,
+            size: 'lg',
+            resolve: {
+              title: function() {
+                return feature.modalOptions.title;
+              },
+              items: function() {
+                return feature.modalOptions.items;
+              },
+              summary: function() {
+                return feature.modalOptions.summary;
+              },
+              postLoadFn: function() {
+                return feature.modalOptions.postLoadFn;
+              }
+            }
+          });
+          modalInstance.opened.then(function(evt) {
+            return $timeout(feature.modalOptions.postLoadFn, 1000);
+          });
+        }
+        if (feature.featureTypeLabel === "glycopeptide_match") {
+          return scope.$emit("selectedPredictions", {
+            selectedPredictions: [feature._obj]
+          });
+        }
       });
       scope.featureViewerInstance.onFeatureOn(function(featureShape) {
         var feature, id, mod, modId, _i, _len, _ref, _results;
@@ -669,7 +865,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           return _results;
         }
       });
-      return scope.featureViewerInstance.onFeatureOff(function(featureShape) {
+      scope.featureViewerInstance.onFeatureOff(function(featureShape) {
         var feature, id, mod, modId, _i, _len, _ref, _results;
         id = featureShape.featureId;
         feature = _.find(scope.featureViewerConfig.featuresArray, {
@@ -685,6 +881,10 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("proteinSeq
           }
           return _results;
         }
+      });
+      return angular.element("#protein-sequence-view-container-div").css({
+        height: $window.innerHeight,
+        "overflow-y": "scroll"
       });
     };
     return {
@@ -729,7 +929,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
     scalingUpFn = function(value) {
       return Math.exp(value);
     };
-    ambiguityPlotTemplater = function(scope, seriesData, xAxisTitle, yAxisTitle, tooltipFormatter) {
+    ambiguityPlotTemplater = function(scope, seriesData, xAxisTitle, yAxisTitle) {
       var ambiguityPlotTemplateImpl, infitesimal;
       infitesimal = 1 / (Math.pow(1000, 1000));
       return ambiguityPlotTemplateImpl = {
@@ -774,8 +974,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           height: $window.innerHeight * .8
         },
         tooltip: {
-          formatter: tooltipFormatter,
+          formatter: function() {
+            var contents, point;
+            point = this.point;
+            contents = " MS1 Score: <b>" + point.x + "</b><br/> Mass: <b>" + (scalingUpFn(point.z)) + "</b><br/> MS2 Score: <b>" + point.y + "</b>(ME: <i>" + point.MS2_ScoreMeanError + "</i>)<br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
+            return contents;
+          },
           headerFormat: "<span style=\"color:{series.color}\">●</span> {series.name}</span><br/>",
+          pointFormat: " MS1 Score: <b>{point.x}</b>" + "<br/>Mass: <b>{point.z}</b><br/>MS2 Score: <b>{point.y}</b>(ME: <i>{point.MS2_ScoreMeanError}</i>)<br/> Number of Matches: <b>{series.data.length}</b><br/>",
           positioner: function(boxWidth, boxHeight, point) {
             var ttAnchor;
             ttAnchor = {
@@ -834,7 +1040,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           _.forEach(group, function(pred) {
             return pred.MS2_ScoreMeanError = 0;
           });
-          return ionMassMS1Series.push({
+          return notAmbiguous.push({
             data: group,
             name: "MS1/Mass " + id
           });
@@ -933,14 +1139,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
       };
     };
     updatePlot = function(predictions, scope, element) {
-      var chart, groupParams, ionSeries, notAmbiguous, plotOptions, tooltipFormatter, xAxisTitle, yAxisTitle, _ref;
+      var chart, groupParams, ionSeries, notAmbiguous, plotOptions, xAxisTitle, yAxisTitle, _ref;
       groupParams = scope.grouping.groupingFnKey;
       console.log("Grouping Parameters: ", groupParams);
       scope.seriesData = groupParams.groupingFn(predictions);
       console.log("Series Data: ", scope.seriesData);
       scope.describedPredictions = [];
       _ref = scope.seriesData, ionSeries = _ref.ionSeries, notAmbiguous = _ref.notAmbiguous;
-      plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle = groupParams.xAxisTitle, yAxisTitle = groupParams.yAxisTitle, tooltipFormatter = groupParams.tooltipFormatter);
+      plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle = groupParams.xAxisTitle, yAxisTitle = groupParams.yAxisTitle);
       console.log(plotOptions);
       chart = element.find(".ambiguity-plot-container");
       return chart.highcharts(plotOptions);
@@ -948,11 +1154,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
     return {
       restrict: "AE",
       template: "<div class='amiguity-container'> <div class='plot-grouping-fn-selector-container'> <select class='plot-grouping-fn-selector-box' ng-model='grouping.groupingFnKey' ng-options='key for (key, value) in grouping.groupingsOptions' ng-change='requestPredictionsUpdate()'> </select> </div> <div class='ambiguity-plot-container'></div> <div class='ambiguity-peptide-sequences-container' ng-if='describedPredictions.length > 0'> <div class='ambiguity-peptide-attributes-container clearfix'> <div class='pull-left ambiguity-peptide-attributes'> <p>MS2 Score Range: {{describedMS2Min}} - {{describedMS2Max}}</p> <p>Peptide Region: {{describedPredictions[0].startAA}} - {{describedPredictions[0].endAA}}</p> </div> <div class='pull-left ambiguity-peptide-attributes'> <p>Peptide Sequence: {{describedPredictions[0].Peptide}}</p> <p>Distinct Glycan Count: {{keys(_.groupBy(describedPredictions, 'Glycan')).length}} </div> </div> <table class='table table-striped table-compact ambiguity-peptide-sequences-table'> <tr> <th>Glycopeptide Identifier</th> <th>Peptide Coverage</th> <th># Stub Ions</th> <th>B | Y Ions Coverage (+HexNAc)</th> <th>MS2 Score</th> </tr> <tr ng-repeat='match in describedPredictions | orderBy:[\"MS2_Score\",\"Glycan\",\"numStubs\"]:true'> <td ng-bind-html='match.Glycopeptide_identifier | highlightModifications'></td> <td>{{match.meanCoverage | number:4}}</td> <td>{{match.Stub_ions.length}}</td> <td>{{match.percent_b_ion_coverage * 100|number:1}}%({{match.percent_b_ion_with_HexNAc_coverage * 100|number:1}}%) | {{match.percent_y_ion_coverage * 100|number:1}}%({{match.percent_y_ion_with_HexNAc_coverage * 100|number:1}}%) </td> <td>{{match.MS2_Score}}</td> </tr> </table> </div> </div>",
-      scope: {
-        active: "="
-      },
       link: function(scope, element, attr) {
-        scope._predictions = [];
         scope.describedPredictions = [];
         scope.describedMS2Min = 0;
         scope.describedMS2Max = 0;
@@ -961,22 +1163,12 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
           "MS1 Score + Mass": {
             groupingFn: ms1MassGroupingFn,
             xAxisTitle: "MS1 Score",
-            yAxisTitle: "MS2 Score",
-            tooltipFormatter: function() {
-              var contents, point;
-              point = this.point;
-              return contents = " MS1 Score: <b>" + point.x + "</b><br/> Mass: <b>" + (scalingUpFn(point.z)) + "</b><br/> MS2 Score: <b>" + point.y + "</b>(ME: <i>" + point.MS2_ScoreMeanError + "</i>)<br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
-            }
+            yAxisTitle: "MS2 Score"
           },
           "Start AA + Length": {
             groupingFn: positionGroupingFn,
             xAxisTitle: "Peptide Start Position",
-            yAxisTitle: "MS2 Score",
-            tooltipFormatter: function() {
-              var contents, point;
-              point = this.point;
-              return contents = " Amino Acid Span: <b>" + point.x + " -> " + (point.x + point.z) + "</b><br/> MS2 Score: <b>" + point.y + "</b><br/> Number of Matches: <b>" + point.series.data.length + "</b><br/>";
-            }
+            yAxisTitle: "MS2 Score"
           }
         };
         scope._ = _;
@@ -1000,8 +1192,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("ambiguityP
         });
         scope.$on("ambiguityPlot.renderPlot", function(evt, params) {
           console.log("Received", arguments);
-          scope._predictions = params.predictions;
-          return updatePlot(params.predictions, scope, element);
+          return updatePlot(scope.predictions, scope, element);
         });
         return scope.requestPredictionsUpdate = function(opts) {
           if (opts == null) {
@@ -1094,53 +1285,82 @@ angular.module('GlycReSoftMSMSGlycopeptideResultsViewApp').directive("popoverHtm
   }
 ]);
 ;
-angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").filter("highlightModifications", function() {
-  return function(input, colorMap) {
-    var frag, fragments, modName, out, regex, _i, _len;
-    if (input == null) {
-      input = '';
-    }
-    if (colorMap == null) {
-      colorMap = {};
-    }
-    out = "";
-    regex = /(\(.+?\)|\[.+?\])/;
-    fragments = input.split(regex);
-    for (_i = 0, _len = fragments.length; _i < _len; _i++) {
-      frag = fragments[_i];
-      if (frag.charAt(0) === "(") {
-        modName = frag.replace(/\(|\)/g, "");
-        if (colorMap[modName] != null) {
-          out += "<span class='mod-string' style='color:" + colorMap[modName] + "'>" + frag + "</span>";
-        } else {
-          out += "<span class='mod-string css-" + modName + "'>" + frag + "</span>";
-        }
-      } else if (frag.charAt(0) === "[") {
-        out += " <b>" + frag + "</b>";
-      } else {
-        out += frag;
+angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("helpMenu", [
+  "$modal", function($modal) {
+    return {
+      link: function(scope, element, attrs) {
+        console.log("Help", arguments);
+        return element.click(function() {
+          var modalInstance;
+          return modalInstance = $modal.open({
+            templateUrl: 'templates/help-text.html',
+            size: 'lg'
+          });
+        });
       }
-    }
-    return out;
-  };
-});
+    };
+  }
+]);
+;
+angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").filter("highlightModifications", [
+  "colorService", "$sce", function(colorService, $sce) {
+    return function(input, sce) {
+      var frag, fragments, modName, out, regex, _i, _len;
+      if (input == null) {
+        input = '';
+      }
+      if (sce == null) {
+        sce = true;
+      }
+      out = "";
+      regex = /(\(.+?\)|\[.+?\])/;
+      fragments = input.split(regex);
+      for (_i = 0, _len = fragments.length; _i < _len; _i++) {
+        frag = fragments[_i];
+        if (frag.charAt(0) === "(") {
+          modName = frag.replace(/\(|\)/g, "");
+          out += "<span class='mod-string' style='color:" + (colorService.getColor(modName)) + "'>" + frag + "</span>";
+        } else if (frag.charAt(0) === "[") {
+          out += " <b>" + frag + "</b>";
+        } else {
+          out += frag;
+        }
+      }
+      if (sce) {
+        out = $sce.trustAsHtml(out);
+      }
+      return out;
+    };
+  }
+]);
 ;
 angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").filter("scientificNotation", function() {
   return function(input, options) {
-    var decimals, exponent, fractionSize, fractional, integer, mantissa, sciNot, stringForm, _ref, _ref1;
+    var decimals, exponent, fractionSize, fractional, integer, mantissa, sciNot, stringForm, _ref, _ref1, _ref2;
     if (options == null) {
       options = {};
     }
     decimals = options.decimals || 5;
     fractionSize = (options.fraction || 5) + 2;
-    if ((typeof input) === !"number") {
+    if ((typeof input) !== "number") {
       input = parseFloat(input);
     }
     stringForm = input.toString();
-    _ref = stringForm.split("."), integer = _ref[0], mantissa = _ref[1];
-    if (mantissa.length > decimals) {
+    if ((input < (Math.pow(10, decimals))) && (stringForm.indexOf('.') !== -1)) {
+      _ref = stringForm.split("."), integer = _ref[0], mantissa = _ref[1];
+      if ((mantissa.length > decimals) || (stringForm.length > (decimals * 2))) {
+        sciNot = input.toExponential();
+        _ref1 = sciNot.split(/e/), fractional = _ref1[0], exponent = _ref1[1];
+        if (fractional.length > fractionSize) {
+          fractional = fractional.slice(0, fractionSize);
+        }
+        return fractional + "e" + exponent;
+      } else {
+        return input;
+      }
+    } else if (input > Math.pow(10, decimals)) {
       sciNot = input.toExponential();
-      _ref1 = sciNot.split(/e/), fractional = _ref1[0], exponent = _ref1[1];
+      _ref2 = sciNot.split(/e/), fractional = _ref2[0], exponent = _ref2[1];
       if (fractional.length > fractionSize) {
         fractional = fractional.slice(0, fractionSize);
       }

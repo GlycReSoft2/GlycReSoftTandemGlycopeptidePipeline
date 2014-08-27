@@ -10,7 +10,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
     scalingUpFn = (value) -> Math.exp(value)
 
     # Injects the directive scope into the Highcharts.Chart instance's callbacks
-    ambiguityPlotTemplater = (scope, seriesData, xAxisTitle, yAxisTitle, tooltipFormatter) ->
+    ambiguityPlotTemplater = (scope, seriesData, xAxisTitle, yAxisTitle) ->
         # Very small number for zooming to
         infitesimal = 1/(Math.pow(1000, 1000))
         ambiguityPlotTemplateImpl = {
@@ -54,13 +54,20 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                 height: $window.innerHeight * .8
             },
             tooltip: {
-                formatter: tooltipFormatter
+                formatter: () ->
+                    point = this.point
+                    contents = " MS1 Score: <b>#{point.x}</b><br/>
+                Mass: <b>#{scalingUpFn(point.z)}</b><br/>
+                MS2 Score: <b>#{point.y}</b>(ME: <i>#{point.MS2_ScoreMeanError}</i>)<br/>
+                Number of Matches: <b>#{point.series.data.length}</b><br/>
+                "
+                    return contents
                 headerFormat: "<span style=\"color:{series.color}\">●</span> {series.name}</span><br/>"
                 #Leading space is required to align the first character of each row.
-                #pointFormat: " !!@MS1 Score: <b>{point.x}</b>" +
-                #"<br/>Mass: <b>{point.z}</b><br/>MS2 Score: <b>{point.y}</b>(ME: <i>{point.MS2_ScoreMeanError}</i>)<br/>
-                #Number of Matches: <b>{series.data.length}</b><br/>
-                #"
+                pointFormat: " MS1 Score: <b>{point.x}</b>" +
+                "<br/>Mass: <b>{point.z}</b><br/>MS2 Score: <b>{point.y}</b>(ME: <i>{point.MS2_ScoreMeanError}</i>)<br/>
+                Number of Matches: <b>{series.data.length}</b><br/>
+                "
                 positioner: (boxWidth, boxHeight, point) ->
                     ttAnchor = {x: point.plotX, y: point.plotY}
                     ttAnchor.x -= (boxWidth * 1)
@@ -98,7 +105,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
             (group, id) ->
                 if(group.length == 1)
                     _.forEach(group, (pred) -> pred.MS2_ScoreMeanError = 0)
-                    ionMassMS1Series.push {data: group, name: "MS1/Mass " + id}
+                    notAmbiguous.push {data: group, name: "MS1/Mass " + id}
                 else # Calculate the distance from the mean of the MS2 Scores in this series
                     scoreRange = _.pluck(group, "y")
                     mean = 0
@@ -150,7 +157,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
         {ionSeries, notAmbiguous} = scope.seriesData
         # Initialize the plot template object, passing grouping labels
         plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle=groupParams.xAxisTitle,
-            yAxisTitle=groupParams.yAxisTitle, tooltipFormatter=groupParams.tooltipFormatter)
+            yAxisTitle=groupParams.yAxisTitle)
         # Render the plot using HighCharts
         console.log(plotOptions)
         chart = element.find(".ambiguity-plot-container")
@@ -198,11 +205,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                 </div>
             </div>
                 "
-            scope: {
-                active:"="
-            }
             link: (scope, element, attr) ->
-                scope._predictions = []
                 scope.describedPredictions = []
                 scope.describedMS2Min = 0
                 scope.describedMS2Max = 0
@@ -212,24 +215,11 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                         groupingFn: ms1MassGroupingFn
                         xAxisTitle: "MS1 Score"
                         yAxisTitle: "MS2 Score"
-                        tooltipFormatter: () ->
-                            point = this.point
-                            contents = " MS1 Score: <b>#{point.x}</b><br/>
-                            Mass: <b>#{scalingUpFn(point.z)}</b><br/>
-                            MS2 Score: <b>#{point.y}</b>(ME: <i>#{point.MS2_ScoreMeanError}</i>)<br/>
-                            Number of Matches: <b>#{point.series.data.length}</b><br/>
-                            "
                     }
                     "Start AA + Length": {
                         groupingFn: positionGroupingFn
                         xAxisTitle: "Peptide Start Position"
                         yAxisTitle: "MS2 Score"
-                        tooltipFormatter: () ->
-                            point = this.point
-                            contents = " Amino Acid Span: <b>#{point.x} -> #{point.x + point.z}</b><br/>
-                            MS2 Score: <b>#{point.y}</b><br/>
-                            Number of Matches: <b>#{point.series.data.length}</b><br/>
-                            "
                     }
                 }
                 scope._ = _ # let lodash be used in expressions
@@ -249,8 +239,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                     )
                 scope.$on "ambiguityPlot.renderPlot", (evt, params)->
                     console.log("Received", arguments)
-                    scope._predictions = params.predictions
-                    updatePlot(params.predictions, scope, element)
+                    #scope.predictions = params.predictions
+                    updatePlot(scope.predictions, scope, element)
 
                 scope.requestPredictionsUpdate = (opts = {})->
                     console.log "Requesting Updates"
