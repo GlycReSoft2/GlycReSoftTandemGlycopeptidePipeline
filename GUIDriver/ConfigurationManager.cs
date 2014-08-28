@@ -22,7 +22,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
     /// <summary>
     /// Handles reading and writing of configuration information to and from disk for persistent but volatile data representing the host machine's settings and services. Currently provides services related locating the Python and Rscript executables through the ScriptingSettings class.
     /// </summary>
-    public class ConfigurationManager
+    public static class ConfigurationManager
     {
         /// <summary>
         /// The defacto file name for storing configurations
@@ -36,6 +36,19 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
         public static ScriptingSettings Scripting = null;
         public static AlgorithmSettings Algorithm = null;
 
+        public static void Save()
+        {
+            try
+            {
+                WriteScriptingSettingsToFile(Application.StartupPath, Scripting);
+                WriteAlgorithmSettingsToFile(Application.StartupPath, Algorithm);
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show("Could not successfully write data to startup files, Reason: " + ex.Message);
+            }
+        }
+
         /// <summary>
         /// Attempts to load the scripting settings from the defacto file at the given path.
         /// 
@@ -45,7 +58,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
         /// <returns></returns>
         public static ScriptingSettings LoadScriptingSettings(String path)
         {
-            String targetPath = Path.Combine(path, SCRIPT_CONF_FILE_NAME);
+            String targetPath = Path.Combine(path, SCRIPT_CONF_FILE_NAME);            
             ScriptingSettings settings = new ScriptingSettings();
             try
             {
@@ -57,9 +70,9 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
                     settings = new ScriptingSettings();
                     throw new SettingsFileOutdatedException();
                 }
-            }
-            catch
-            {
+            }            
+            catch(Exception ex)
+            {                
                 try
                 {
                     WriteScriptingSettingsToFile(path, settings);
@@ -82,13 +95,15 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
         public static String WriteScriptingSettingsToFile(String path, ScriptingSettings settings)
         {
             String outputFile = Path.Combine(path, SCRIPT_CONF_FILE_NAME);
+            File.Delete(outputFile);
             StreamWriter writer = new StreamWriter(
                 new FileStream(
                     outputFile, 
                     FileMode.OpenOrCreate,
                     FileAccess.Write)
                 );
-            String content = JsonConvert.SerializeObject(settings);
+            String content = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            Console.WriteLine(content);
             writer.Write(content);
             writer.Close();
             return outputFile;
@@ -129,6 +144,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
         public static string WriteAlgorithmSettingsToFile(string path, AlgorithmSettings settings)
         {
             String outputFile = Path.Combine(path, ALGORITHM_CONF_FILE_NAME);
+            File.Delete(outputFile);
             StreamWriter writer = new StreamWriter(
                 new FileStream(
                     outputFile,

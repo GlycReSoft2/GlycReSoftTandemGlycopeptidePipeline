@@ -61,7 +61,7 @@ do (()->
             $scope._predictions = orderBy(newVal, ["MS1_Score", "Obs_Mass", "-MS2_Score"])
             filteredPredictions = filterByFiltrex($scope, orderBy)
             filteredPredictions = $scope._predictions if not filteredPredictions?
-            groupedPredictions = $scope.setGroupBy(((x) -> [x.MS1_Score, x.Obs_Mass] ), filteredPredictions)
+            groupedPredictions = $scope.setGroupBy($scope.params.currentGroupingRule.groupByKey, filteredPredictions)
             $scope.predictions = groupedPredictions
             return true
         false)
@@ -96,21 +96,62 @@ do (()->
 
     }
 
+    filterRules = {
+        requirePeptideBackboneCoverage: {
+            label: "Require Peptide Backbone Fragment Ions Matches"
+            filtrex: "Mean Peptide Coverage > 0"
+        }
+        requireStubIons: {
+            label: "Require Stub Ions Matches"
+            filtrex: "Stub Ion Count > 0"
+        }
+        requireIonsWithHexNAc: {
+            label: "Require Peptide Backbone Ion Fragmentss with HexNAc Matches"
+            filtrex: "(% Y Ion With HexNAc Coverage + % B Ion With HexNAc Coverage) > 0"
+        }
+    }
+
+    groupingRules = {
+        ms1ScoreObsMass: {
+            label: "Group ion matches by MS1 Score and Observed Mass (Ambiguous Matches)"
+            groupByKey: (x) -> [x.MS1_Score, x.Obs_Mass]
+        }
+        startAALength: {
+            label: "Group ion matches by the starting amino acid index and the peptide length (Heterogeneity)"
+            groupByKey: (x) -> [x.startAA, x.peptideLens]
+        }
+
+    }
+
     angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").controller(
         "ClassifierResultsTableCtrl", [ "$scope", "$window", '$filter', 'csvService',
         ($scope, $window, $filter, csvService) ->
             orderBy = $filter("orderBy")
+            $scope.helpText = helpText
+            $scope.filterRules = filterRules
+            $scope.groupingRules = groupingRules
+
             $scope.predictions = []
-            $scope.params = {}
-            $scope.headerSubstituitionDictionary = {}
-            $scope.params.ms2ScoreTolerance = 0.1
-            $scope.params.filtrexExpr = "MS2 Score > 0.2"
             $scope._predictions = []
             $scope._predictionsReceiver = []
+
+            $scope.params = {}
+            $scope.headerSubstituitionDictionary = {}
+
+            $scope.params.filtrexExpr = "MS2 Score > 0.2"
+            $scope.params.currentGroupingRule = $scope.groupingRules.ms1ScoreObsMass
+
             $scope.groupByKey = null
             $scope.deregisterWatcher = null
 
             $scope.ping = (args) -> console.log("ping", arguments, $scope)
+
+            $scope.extendFiltrex = (expr) ->
+                console.log "Extending Filtrex with #{expr}"
+                if $scope.params.filtrexExpr.length > 0
+                    $scope.params.filtrexExpr += " and " + expr
+                else
+                    $scope.params.filtrexExpr += expr
 
             $scope.filterByFiltrex = ->
                 dictionary = $scope.substituteHeaders()
@@ -336,7 +377,9 @@ do (()->
                                 </div>
                             </div>'
             }
-            $scope.helpText = helpText
+
+
+
             activateFn($scope, $window, $filter)
             $window.ClassifierResultsTableCtrlInstance = $scope])
 )

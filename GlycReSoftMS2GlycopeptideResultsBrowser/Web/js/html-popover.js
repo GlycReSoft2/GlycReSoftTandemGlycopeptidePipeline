@@ -13,6 +13,7 @@ angular.module('GlycReSoftMSMSGlycopeptideResultsViewApp').directive("popoverHtm
   };
 }).directive("popoverHtmlUnsafe", [
   "$tooltip", function($tooltip) {
+    console.log(arguments);
     return $tooltip("popoverHtmlUnsafe", "popover", "click");
   }
 ]);

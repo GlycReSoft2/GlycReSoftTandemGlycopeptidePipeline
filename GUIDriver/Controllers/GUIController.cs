@@ -123,7 +123,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
             {
                 Console.WriteLine(e.Message);
                 MessageBox.Show("An error occurred during classification: " + e.Message, "Error");
-                return null;
+                throw;
             }
         }
 
@@ -134,31 +134,22 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
         /// <returns></returns>
         public ResultsRepresentation PrepareModelFile()
         {
-            try
-            {
-                MSDigestReport proteinProspectorReport = MSDigestReport.Load(ProteinProspectorMSDigestFilePath);
-                MSDigestReportParameters digestParameters = proteinProspectorReport.Parameters;
+            MSDigestReport proteinProspectorReport = MSDigestReport.Load(ProteinProspectorMSDigestFilePath);
+            MSDigestReportParameters digestParameters = proteinProspectorReport.Parameters;
 
-                this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
-                    GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
-                    goldStandardPath: ModelFilePath, outputFilePath: null,
-                    constantModifications: proteinProspectorReport.ConstantModifications,
-                    variableModifications: proteinProspectorReport.VariableModifications,
-                    ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
-                    ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
-                    pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
-                    rscriptPath: ConfigurationManager.Scripting.RscriptInterpreterPath);
+            this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
+                GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
+                goldStandardPath: ModelFilePath, outputFilePath: null,
+                constantModifications: proteinProspectorReport.ConstantModifications,
+                variableModifications: proteinProspectorReport.VariableModifications,
+                ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
+                ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
+                pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
+                rscriptPath: ConfigurationManager.Scripting.RscriptInterpreterPath);
 
-                ResultsRepresentation modelRepresentation = Pipeline.RunModelBuilder();
-                File.Delete(modelRepresentation.SourceFile);
-                return modelRepresentation;
-            }
-            catch (TandemGlycoPeptidePipelineException e)
-            {
-                MessageBox.Show("An error occurred during model building: " + e.Message, "Error");
-                return null;
-            }
-
+            ResultsRepresentation modelRepresentation = Pipeline.RunModelBuilder();
+            File.Delete(modelRepresentation.SourceFile);
+            return modelRepresentation;
         }
 
         [Serializable]

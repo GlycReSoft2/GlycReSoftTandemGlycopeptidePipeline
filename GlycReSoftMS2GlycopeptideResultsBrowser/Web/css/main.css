@@ -615,6 +615,9 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 #filtrex-control {
   padding: 25px;
 }
+.filtrex-ctrl-anchor {
+  margin-left: 15px;
+}
 #filtrex-usage-anchor {
   margin-left: 15px;
 }

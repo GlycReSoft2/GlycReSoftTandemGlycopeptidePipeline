@@ -176,6 +176,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
                 catch(Exception ex)
                 {
                     MessageBox.Show("An error occurred while processing this task: " + ex.Message);
+                    WaitScreen.Close();
                 }
 
             }
@@ -201,9 +202,17 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
         }
 
         void createModelWorker_DoWork(object sender, DoWorkEventArgs e)
-        {            
-            var preparedModelData = Controller.PrepareModelFile();
-            e.Result = preparedModelData;
+        {
+            try
+            {
+                var preparedModelData = Controller.PrepareModelFile();
+                e.Result = preparedModelData;
+            }
+            catch (ScriptingException ex)
+            {
+                MessageBox.Show("An error occurred during classification: " + ex.Message, "Error");
+                throw;
+            }
         }
 
         /// <summary>
@@ -250,6 +259,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
                 catch (Exception ex)
                 {
                     MessageBox.Show("An error occurred while processing this task: " + ex.Message);
+                    WaitScreen.Close();
                 }
                 
             }

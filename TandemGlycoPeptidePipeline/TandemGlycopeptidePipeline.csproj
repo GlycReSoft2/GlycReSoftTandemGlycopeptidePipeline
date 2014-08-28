@@ -125,6 +125,9 @@
     <Content Include="python\glycresoft_ms2_classification\R\label_and_disambiguate.R">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="python\glycresoft_ms2_classification\structure\data\ProteinProspectorModifications-for_gly2.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

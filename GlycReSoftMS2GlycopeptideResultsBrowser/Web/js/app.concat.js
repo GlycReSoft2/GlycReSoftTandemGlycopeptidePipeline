@@ -21,7 +21,7 @@ Array.prototype.mean = function() {
 var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 (function() {
-  var activateFn, applyFiltrex, filterByFiltrex, focusRow, helpText, setGroupBy, updateFiltrexDebounce, watchExternalDataChanges;
+  var activateFn, applyFiltrex, filterByFiltrex, filterRules, focusRow, groupingRules, helpText, setGroupBy, updateFiltrexDebounce, watchExternalDataChanges;
   setGroupBy = function(grouping, predictions) {
     var clustered, id;
     clustered = _.groupBy(predictions, grouping);
@@ -95,9 +95,7 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
       if (filteredPredictions == null) {
         filteredPredictions = $scope._predictions;
       }
-      groupedPredictions = $scope.setGroupBy((function(x) {
-        return [x.MS1_Score, x.Obs_Mass];
-      }), filteredPredictions);
+      groupedPredictions = $scope.setGroupBy($scope.params.currentGroupingRule.groupByKey, filteredPredictions);
       $scope.predictions = groupedPredictions;
       return true;
     }, false);
@@ -142,21 +140,60 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
   helpText = {
     filtrex: '<article class="help-article"><h3>Filtrex</h3><h4>Expressions</h4><p>There are only 2 types: numbers and strings.</p><table><tbody><table class="table"><thead><tr><th>Numeric arithmetic</th><th>Description</th></tr></thead><tbody><tr><td>x + y</td><td>Add</td></tr><tr><td>x - y</td><td>Subtract</td></tr><tr><td>x * y</td><td>Multiply</td></tr><tr><td>x / y</td><td>Divide</td></tr><tr><td>x % y</td><td>Modulo</td></tr><tr><td>x ^ y</td><td>Power</td></tr></tbody></table><table class="table"><thead><tr><th>Comparisons</th><th>Description</th></tr></thead><tbody><tr><td>x == y</td><td>Equals</td></tr><tr><td>x &lt; y</td><td>Less than</td></tr><tr><td>x &lt;= y</td><td>Less than or equal to</td></tr><tr><td>x &gt; y</td><td>Greater than</td></tr><tr><td>x &gt;= y</td><td>Greater than or equal to</td></tr><tr><td>x in (a, b, c)</td><td>Equivalent to (x == a or x == b or x == c)</td></tr><tr><td>x not in (a, b, c)</td><td>Equivalent to (x != a and x != b and x != c)</td></tr></tbody></table><table class="table"><thead><tr><th>Boolean logic</th><th>Description</th></tr></thead><tbody><tr><td>x or y</td><td>Boolean or</td></tr><tr><td>x and y</td><td>Boolean and</td></tr><tr><td>not x</td><td>Boolean not</td></tr><tr><td>x ? y : z</td><td>If boolean x, value y, else z</td></tr></tbody></table><p>Created by Joe Walnes, <a href="https://github.com/joewalnes/filtrex"><br/>(See https://github.com/joewalnes/filtrex for more usage information.)</a></p></article>'
   };
+  filterRules = {
+    requirePeptideBackboneCoverage: {
+      label: "Require Peptide Backbone Fragment Ions Matches",
+      filtrex: "Mean Peptide Coverage > 0"
+    },
+    requireStubIons: {
+      label: "Require Stub Ions Matches",
+      filtrex: "Stub Ion Count > 0"
+    },
+    requireIonsWithHexNAc: {
+      label: "Require Peptide Backbone Ion Fragmentss with HexNAc Matches",
+      filtrex: "(% Y Ion With HexNAc Coverage + % B Ion With HexNAc Coverage) > 0"
+    }
+  };
+  groupingRules = {
+    ms1ScoreObsMass: {
+      label: "Group ion matches by MS1 Score and Observed Mass (Ambiguous Matches)",
+      groupByKey: function(x) {
+        return [x.MS1_Score, x.Obs_Mass];
+      }
+    },
+    startAALength: {
+      label: "Group ion matches by the starting amino acid index and the peptide length (Heterogeneity)",
+      groupByKey: function(x) {
+        return [x.startAA, x.peptideLens];
+      }
+    }
+  };
   return angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").controller("ClassifierResultsTableCtrl", [
     "$scope", "$window", '$filter', 'csvService', function($scope, $window, $filter, csvService) {
       var orderBy;
       orderBy = $filter("orderBy");
+      $scope.helpText = helpText;
+      $scope.filterRules = filterRules;
+      $scope.groupingRules = groupingRules;
       $scope.predictions = [];
-      $scope.params = {};
-      $scope.headerSubstituitionDictionary = {};
-      $scope.params.ms2ScoreTolerance = 0.1;
-      $scope.params.filtrexExpr = "MS2 Score > 0.2";
       $scope._predictions = [];
       $scope._predictionsReceiver = [];
+      $scope.params = {};
+      $scope.headerSubstituitionDictionary = {};
+      $scope.params.filtrexExpr = "MS2 Score > 0.2";
+      $scope.params.currentGroupingRule = $scope.groupingRules.ms1ScoreObsMass;
       $scope.groupByKey = null;
       $scope.deregisterWatcher = null;
       $scope.ping = function(args) {
         return console.log("ping", arguments, $scope);
+      };
+      $scope.extendFiltrex = function(expr) {
+        console.log("Extending Filtrex with " + expr);
+        if ($scope.params.filtrexExpr.length > 0) {
+          return $scope.params.filtrexExpr += " and " + expr;
+        } else {
+          return $scope.params.filtrexExpr += expr;
+        }
       };
       $scope.filterByFiltrex = function() {
         var column, dictionary, expr, groupedResults, key, orderedResults, results;
@@ -347,7 +384,6 @@ var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; 
         ],
         rowTemplate: '<div style="height: 100%" class="c{{row.entity.groupBy % 6}}"> <div ng-style="{ \'cursor\': row.cursor }" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell matched-ions-cell"> <div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }"> </div> <div ng-cell> </div> </div> </div>'
       };
-      $scope.helpText = helpText;
       activateFn($scope, $window, $filter);
       return $window.ClassifierResultsTableCtrlInstance = $scope;
     }
@@ -1281,6 +1317,7 @@ angular.module('GlycReSoftMSMSGlycopeptideResultsViewApp').directive("popoverHtm
   };
 }).directive("popoverHtmlUnsafe", [
   "$tooltip", function($tooltip) {
+    console.log(arguments);
     return $tooltip("popoverHtmlUnsafe", "popover", "click");
   }
 ]);
@@ -1293,7 +1330,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("helpMenu",
         return element.click(function() {
           var modalInstance;
           return modalInstance = $modal.open({
-            templateUrl: 'templates/help-text.html',
+            templateUrl: '/Web/templates/help-text.html',
             size: 'lg'
           });
         });

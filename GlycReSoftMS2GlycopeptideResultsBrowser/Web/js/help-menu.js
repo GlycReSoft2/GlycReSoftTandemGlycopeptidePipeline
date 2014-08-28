@@ -6,7 +6,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive("helpMenu",
         return element.click(function() {
           var modalInstance;
           return modalInstance = $modal.open({
-            templateUrl: 'templates/help-text.html',
+            templateUrl: '/Web/templates/help-text.html',
             size: 'lg'
           });
         });
