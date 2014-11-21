@@ -10,13 +10,13 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
     scalingUpFn = (value) -> Math.exp(value)
 
     # Injects the directive scope into the Highcharts.Chart instance's callbacks
-    ambiguityPlotTemplater = (scope, seriesData, xAxisTitle, yAxisTitle) ->
+    ambiguityPlotTemplater = (scope, seriesData, xAxisTitle, yAxisTitle, plotType = 'bubble') ->
         # Very small number for zooming to
         infitesimal = 1/(Math.pow(1000, 1000))
         ambiguityPlotTemplateImpl = {
             chart: {
                 height: $window.innerHeight * 0.6
-                type: "bubble"
+                type: plotType
                 zoomType: 'xy'
             }
             plotOptions: {
@@ -32,7 +32,6 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                                 scope.$apply(() ->
                                     scope.describedPredictions = _.pluck(point.series.points, "data")
                                     )
-                                console.log(this)
                                 chart.xAxis[0].setExtremes(Math.min.apply(null, xs) * (1 - infitesimal), Math.max.apply(null, xs) * (1 + infitesimal))
                                 chart.yAxis[0].setExtremes(Math.min.apply(null, ys) * (1 - infitesimal), Math.max.apply(null, ys) * (1 + infitesimal))
                                 chart.showResetZoom()
@@ -56,18 +55,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
             tooltip: {
                 formatter: () ->
                     point = this.point
-                    contents = " MS1 Score: <b>#{point.x}</b><br/>
-                Mass: <b>#{scalingUpFn(point.z)}</b><br/>
-                MS2 Score: <b>#{point.y}</b>(ME: <i>#{point.MS2_ScoreMeanError}</i>)<br/>
-                Number of Matches: <b>#{point.series.data.length}</b><br/>
-                "
+                    contents = "#{point.titles.x}: <b>#{point.x}</b><br/>"
+                    contents += "#{point.titles.z}: <b>#{point.z}</b><br/>" if point.titles.z != "None" and point.titles.z?
+                    contents += "#{point.titles.y}: <b>#{point.y}</b><br/>" if point.titles.y != "" and point.titles.y?
+                    contents += "Number of Matches: <b>#{point.series.data.length}</b><br/>"
                     return contents
                 headerFormat: "<span style=\"color:{series.color}\">●</span> {series.name}</span><br/>"
                 #Leading space is required to align the first character of each row.
-                pointFormat: " MS1 Score: <b>{point.x}</b>" +
-                "<br/>Mass: <b>{point.z}</b><br/>MS2 Score: <b>{point.y}</b>(ME: <i>{point.MS2_ScoreMeanError}</i>)<br/>
-                Number of Matches: <b>{series.data.length}</b><br/>
-                "
+
                 positioner: (boxWidth, boxHeight, point) ->
                     ttAnchor = {x: point.plotX, y: point.plotY}
                     ttAnchor.x -= (boxWidth * 1)
@@ -95,136 +90,143 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
             series: seriesData
         } # Close template
 
-    ms1MassGroupingFn = (predictions) ->
-        ionPoints = ({x: p.MS1_Score, y: p.MS2_Score, z: scalingDownFn(p.Obs_Mass), data: p} for p in predictions)
-        ionMassMS1Groups = _.groupBy ionPoints, (pred) -> pred.x.toFixed(3) + "-" + pred.z.toFixed(3)
-        ionMassMS1Series = []
-        notAmbiguous = []
-        perfectAmbiguous = []
-        _.forEach ionMassMS1Groups,
-            (group, id) ->
-                if(group.length == 1)
-                    _.forEach(group, (pred) -> pred.MS2_ScoreMeanError = 0)
-                    notAmbiguous.push {data: group, name: "MS1/Mass " + id}
-                else # Calculate the distance from the mean of the MS2 Scores in this series
-                    scoreRange = _.pluck(group, "y")
-                    mean = 0
-                    for s in scoreRange
-                        mean += s
-                    mean /= scoreRange.length
-
-                    meanError = ((s - mean) for s in scoreRange)
-                    for i in [0...group.length]
-                        group[i].MS2_ScoreMeanError = if meanError[i] == 0 then 0 else meanError[i].toFixed(4)
-
-                    ionMassMS1Series.push {data: group, name: "MS1/Mass " + id}
-        return {ionSeries: ionMassMS1Series, notAmbiguous: notAmbiguous}
-
-    positionGroupingFn = (predictions) ->
-        ionPoints = ({x: p.startAA, y: p.MS2_Score, z: p.endAA - p.startAA, data: p} for p in predictions)
-        ionStartLengthGroups = _.groupBy ionPoints, (pred) -> pred.x.toFixed(3) + "-" + pred.z.toFixed(3)
-        ionStartLengthSeries = []
-        notAmbiguous = []
-        perfectAmbiguous = []
-        _.forEach ionStartLengthGroups,
-            (group, id) ->
-                if(group.length == 1)
-                    _.forEach(group, (pred) -> pred.MS2_ScoreMeanError = 0)
-                    ionStartLengthSeries.push {data: group, name: "Start AA/Length  " + id}
-                else # Calculate the distance from the mean of the MS2 Scores in this series
-                    scoreRange = _.pluck(group, "y")
-                    mean = 0
-                    for s in scoreRange
-                        mean += s
-                    mean /= scoreRange.length
-
-                    meanError = ((s - mean) for s in scoreRange)
-                    for i in [0...group.length]
-                        group[i].MS2_ScoreMeanError = if meanError[i] == 0 then 0 else meanError[i].toFixed(4)
-
-                    ionStartLengthSeries.push {data: group, name: "Start AA/Length " + id}
-        return {ionSeries: ionStartLengthSeries, notAmbiguous: notAmbiguous}
+    genericGroupingFn = (xAxis, yAxis, zAxis, groupingName = "") ->
+        if groupingName is ""
+            groupingName = xAxis.name
+            groupingName += "/" + zAxis.name if zAxis.name? and zAxis.name != ""
+        # Allow axis definitions to be functions or attributes
+        xAxisGetter = (p) -> p[xAxis.getter]
+        if typeof(xAxis.getter) is "function"
+            xAxisGetter = (p) -> xAxis.getter(p)
+        yAxisGetter = (p) -> p[yAxis.getter]
+        if typeof(yAxis.getter) is "function"
+            yAxisGetter = (p) -> yAxis.getter(p)
+        zAxisGetter = (p) -> p[zAxis.getter]
+        if typeof(zAxis.getter) is "function"
+            zAxisGetter = (p) -> zAxis.getter(p)
+        fn = (predictions) ->
+            ionPoints = ({x: xAxisGetter(p), y: yAxisGetter(p), z:zAxisGetter(p), data: p, titles:{x:xAxis.name, y:yAxis.name, z:zAxis.name}} for p in predictions)
+            ionGroupings = _.groupBy ionPoints, (pred) ->
+                xVal = pred.x
+                if typeof(xVal) is "number" and not Number.isInteger(xVal)
+                    xVal = xVal.toFixed(3)
+                zVal = pred.z
+                if typeof(zVal) is "number" and not Number.isInteger(zVal)
+                    zVal = zVal.toFixed(3)
+                groupId = xVal
+                groupId += '-' + zVal if zVal?
+                return groupId
+            ionSeries = []
+            notAmbiguous = []
+            perfectAmbiguous = [] #Unused
+            _.forEach ionGroupings, (group, id) ->
+                if group.length == 1
+                    notAmbiguous.push {data: group, name: groupingName + " " + id}
+                else
+                    ionSeries.push {data: group, name: groupingName + " " + id}
+            return {ionSeries: ionSeries, notAmbiguous: notAmbiguous}
+        return fn
 
 
     updatePlot = (predictions, scope, element) ->
         # Get grouping configuration bound from UI
         groupParams = scope.grouping.groupingFnKey
-        console.log "Grouping Parameters: ", groupParams
+        #console.log "Grouping Parameters: ", groupParams
         # Generate grouped series data
         scope.seriesData = groupParams.groupingFn(predictions)
-        console.log("Series Data: ", scope.seriesData)
+        #console.log("Series Data: ", scope.seriesData)
         scope.describedPredictions = []
         {ionSeries, notAmbiguous} = scope.seriesData
+        if not scope.ambiguityPlotParams.hideUnambiguous
+            ionSeries = ionSeries.concat(notAmbiguous)
         # Initialize the plot template object, passing grouping labels
         plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle=groupParams.xAxisTitle,
-            yAxisTitle=groupParams.yAxisTitle)
+            yAxisTitle=groupParams.yAxisTitle, plotType=groupParams.plotType)
         # Render the plot using HighCharts
-        console.log(plotOptions)
+        #console.log(plotOptions)
         chart = element.find(".ambiguity-plot-container")
         chart.highcharts(plotOptions)
+        return true
 
     return {
             restrict: "AE"
-            template: "
-            <div class='amiguity-container'>
-                <div class='plot-grouping-fn-selector-container'>
-                    <select class='plot-grouping-fn-selector-box' ng-model='grouping.groupingFnKey'
-                        ng-options='key for (key, value) in grouping.groupingsOptions' ng-change='requestPredictionsUpdate()'>
-                    </select>
-                </div>
-                <div class='ambiguity-plot-container'></div>
-                <div class='ambiguity-peptide-sequences-container' ng-if='describedPredictions.length > 0'>
-                    <div class='ambiguity-peptide-attributes-container clearfix'>
-                    <div class='pull-left ambiguity-peptide-attributes'>
-                        <p>MS2 Score Range: {{describedMS2Min}} - {{describedMS2Max}}</p>
-                        <p>Peptide Region: {{describedPredictions[0].startAA}} - {{describedPredictions[0].endAA}}</p>
-                    </div>
-                    <div class='pull-left ambiguity-peptide-attributes'>
-                        <p>Peptide Sequence: {{describedPredictions[0].Peptide}}</p>
-                        <p>Distinct Glycan Count: {{keys(_.groupBy(describedPredictions, 'Glycan')).length}}
-                    </div>
-                    </div>
-                    <table class='table table-striped table-compact ambiguity-peptide-sequences-table'>
-                        <tr>
-                            <th>Glycopeptide Identifier</th>
-                            <th>Peptide Coverage</th>
-                            <th># Stub Ions</th>
-                            <th>B | Y Ions Coverage (+HexNAc)</th>
-                            <th>MS2 Score</th>
-                        </tr>
-                        <tr ng-repeat='match in describedPredictions | orderBy:[\"MS2_Score\",\"Glycan\",\"numStubs\"]:true'>
-                            <td ng-bind-html='match.Glycopeptide_identifier | highlightModifications'></td>
-                            <td>{{match.meanCoverage | number:4}}</td>
-                            <td>{{match.Stub_ions.length}}</td>
-                            <td>{{match.percent_b_ion_coverage * 100|number:1}}%({{match.percent_b_ion_with_HexNAc_coverage * 100|number:1}}%) |
-                                {{match.percent_y_ion_coverage * 100|number:1}}%({{match.percent_y_ion_with_HexNAc_coverage * 100|number:1}}%)
-                                </td>
-                            <td>{{match.MS2_Score}}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-                "
+            scope: {
+                predictions: '='
+                headerSubstituitionDictionary: '=headers'
+            }
+            templateUrl: "templates/ambiguity-plot-template.html"
             link: (scope, element, attr) ->
+                $window.PLOTTING = scope
                 scope.describedPredictions = []
                 scope.describedMS2Min = 0
                 scope.describedMS2Max = 0
                 scope.grouping = {}
                 scope.grouping.groupingsOptions = {
                     "MS1 Score + Mass": {
-                        groupingFn: ms1MassGroupingFn
+                        groupingFn: genericGroupingFn(
+                            {name: "MS1 Score", getter: "MS1_Score"}
+                            {name: "MS2 Score", getter: "MS2_Score"}
+                            {name: "Observed Mass", getter: "Obs_Mass"}
+                            )
                         xAxisTitle: "MS1 Score"
                         yAxisTitle: "MS2 Score"
+                        plotType: 'bubble'
                     }
                     "Start AA + Length": {
-                        groupingFn: positionGroupingFn
+                        groupingFn: genericGroupingFn(
+                                {name: "Start AA", getter: "startAA"}
+                                {name: "MS2 Score", getter: "MS2_Score"}
+                                {name: "Peptide Length", getter: "peptideLens"}
+                            )
                         xAxisTitle: "Peptide Start Position"
                         yAxisTitle: "MS2 Score"
+                        plotType: 'bubble'
+                    }
+                    "Scan Number": {
+                        groupingFn: genericGroupingFn(
+                                {name: 'Scan Number', getter: "scan_id"}
+                                {name: 'Mean Peptide Coverage', getter: 'meanCoverage'}
+                                {name: 'None', getter: (p) -> null}
+                            )
+                        xAxisTitle: 'Scan Number'
+                        yAxisTitle: 'Mean Peptide Coverage'
+                        plotType: 'scatter'
                     }
                 }
                 scope._ = _ # let lodash be used in expressions
                 scope.keys = Object.keys
                 scope.grouping.groupingFnKey = scope.grouping.groupingsOptions["MS1 Score + Mass"]
+                scope.ambiguityPlotParams = {
+                    showCustomPlotter: false
+                    x: "Scan ID"
+                    y: "MS2 Score"
+                    z: "None"
+                    hideUnambiguous: true
+                }
+                scope.describedPeptideRegions = ->
+                    Object.keys(_.groupBy(scope.describedPredictions, (p) -> p.startAA + '-' + p.endAA)).join('; ')
+                scope.plotSelectorChanged = ->
+                    updatePlot(scope.predictions, scope, element)
+                    return true
+                scope.customPlot = ->
+                    x = scope.ambiguityPlotParams.x
+                    y = scope.ambiguityPlotParams.y
+                    z = scope.ambiguityPlotParams.z
+                    groupingParams = {
+                        groupingFn: genericGroupingFn(
+                                {name: x, getter: scope.headerSubstituitionDictionary[x.toLowerCase()]}
+                                {name: y, getter: scope.headerSubstituitionDictionary[y.toLowerCase()]}
+                                {name: z, getter: scope.headerSubstituitionDictionary[z.toLowerCase()]}
+                            )
+                        xAxisTitle: x
+                        yAxisTitle: y
+                        plotType: "bubble"
+                    }
+                    groupingParams.plotType = "scatter" if z is "None"
+                    scope.grouping.groupingsOptions["Custom"] = groupingParams
+                    scope.grouping.groupingFnKey = groupingParams
+                    updatePlot(scope.predictions, scope, element)
+                    return true
 
                 angular.element($window).bind 'resize', ->
                     try
@@ -238,13 +240,11 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                         scope.$emit("selectedPredictions", {selectedPredictions: scope.describedPredictions})
                     )
                 scope.$on "ambiguityPlot.renderPlot", (evt, params)->
-                    console.log("Received", arguments)
-                    #scope.predictions = params.predictions
                     updatePlot(scope.predictions, scope, element)
-
-                scope.requestPredictionsUpdate = (opts = {})->
-                    console.log "Requesting Updates"
-                    scope.$emit("ambiguityPlot.requestPredictionsUpdate", opts)
+                scope.$watch("predictions", ()-> updatePlot(scope.predictions, scope, element))
+                scope.$watch('ambiguityPlotParams.hideUnambiguous', (newVal, oldVal) ->
+                        updatePlot(scope.predictions, scope, element)
+                    )
 
             }
 ]

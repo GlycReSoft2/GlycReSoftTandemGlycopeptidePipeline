@@ -8,7 +8,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "helpMenu",
             console.log("Help", arguments)
             element.click ->
                 modalInstance = $modal.open({
-                        templateUrl: '/Web/templates/help-text.html',
+                        templateUrl: 'templates/help-text.html',
                         size: 'lg'
                     })
     }

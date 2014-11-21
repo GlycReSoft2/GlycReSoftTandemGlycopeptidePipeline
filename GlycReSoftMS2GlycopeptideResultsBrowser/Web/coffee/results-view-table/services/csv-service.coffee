@@ -4,15 +4,62 @@
 GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($window) ->
 
 
-    @serializedFields = ["Oxonium_ions", "Stub_ions", "bare_b_ions", "bare_y_ions", "b_ion_coverage", "y_ion_coverage",
-                        "b_ions_with_HexNAc", "y_ions_with_HexNAc", "startAA", "endAA", "vol", "numOxIons", "numStubs",
-                        "bestCoverage", "meanCoverage", "percentUncovered", "peptideLens", "MS1_Score", "MS2_Score",
-                        "Obs_Mass", "Calc_mass", 'ppm_error', 'abs_ppm_error']
+    @serializedFields = [
+                        "Oxonium_ions",
+                        "Stub_ions",
+                        "bare_b_ions",
+                        "bare_y_ions",
+                        "b_ion_coverage",
+                        "y_ion_coverage",
+                        "b_ions_with_HexNAc",
+                        "y_ions_with_HexNAc",
+                        "startAA",
+                        "endAA",
+                        "vol",
+                        "peptideLens",
+                        "numOxIons",
+                        "numStubs",
+                        "scan_id",
+
+                        "meanCoverage",
+                        "percentUncovered",
+
+                        "meanHexNAcCoverage",
+                        "peptideCoverageMap",
+                        "hexNAcCoverageMap",
+
+                        "bIonCoverageMap",
+                        "bIonCoverageWithHexNAcMap",
+                        "yIonCoverageMap",
+                        "yIonCoverageWithHexNAcMap",
+
+                        "MS1_Score",
+                        "MS2_Score",
+
+                        "Obs_Mass",
+                        "Calc_mass",
+                        'ppm_error',
+                        'abs_ppm_error',
+                        'percent_b_ion_with_HexNAc_coverage',
+                        'percent_y_ion_with_HexNAc_coverage'
+                    ]
+
+    @defaultValues = {
+        "hexNAcCoverageMap": (pred) -> [0 for i in [0...pred.peptideLens]]
+        "peptideCoverageMap": (pred) -> [0 for i in [0...pred.peptideLens]]
+        "meanHexNAcCoverage": (pred) -> 0.0
+        "bIonCoverageMap": (pred)->
+            [0 for i in [0...pred.peptideLens]]
+        "bIonCoverageWithHexNAcMap": (pred)-> [0 for i in [0...pred.peptideLens]]
+        "yIonCoverageMap": (pred)-> [0 for i in [0...pred.peptideLens]]
+        "yIonCoverageWithHexNAcMap": (pred) -> [0 for i in [0...pred.peptideLens]]
+    }
 
 
     @parse = (stringData) ->
         rowData = d3.csv.parse(stringData)
         instantiatedData = @deserializeAfterParse(rowData)
+        @defaultValues(instantiatedData)
         return instantiatedData
 
     @format = (rowData) ->
@@ -30,9 +77,16 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
             obj.call = if obj.call == "Yes" then true else false
             obj.ambiguity = if obj.ambiguity == "True" then true else false
             obj.groupBy = 0
-            #console.log(obj)
             return obj
         )
+        return predictions
+
+    @setDefaultValues = (predictions) ->
+        for pred in predictions
+            for key, defaultFn of @defaultValues
+                if not pred[key]?
+                    pred[key] = defaultFn(pred)
+
         return predictions
 
     @serializeBeforeFormat = (predictions) ->
@@ -49,7 +103,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
         )
         return predictions
 
-    console.log(@)
+    #console.log(@)
     $window.csvService = this
 ]
 

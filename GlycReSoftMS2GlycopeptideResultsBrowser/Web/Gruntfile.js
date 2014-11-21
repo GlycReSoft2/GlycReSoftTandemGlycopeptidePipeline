@@ -1,7 +1,15 @@
 var fs = require("fs");
+var embedTemplates = require("./embed-templates").embedTemplates
 module.exports = function(grunt){
     grunt.initConfig({
         pkg: grunt.file.readJSON("package.json"),
+        embedTemplates: {
+          main: {
+            hostDocumentPath: "index.html",
+            templateDirectoryPath: "templates/",
+            outfilePath: "index.html"
+          }
+        },
         coffee: {
             compile: {
                 options: {
@@ -9,7 +17,6 @@ module.exports = function(grunt){
                     bare: true,
                 },
                 expand: true,
-                flatten: true,
                 cwd: "coffee",
                 src: ["**/*.coffee"],
                 dest: "js",
@@ -42,7 +49,6 @@ module.exports = function(grunt){
                       'js/vendor/es5-shim.min.js',
                       'js/vendor/jquery.min.js',
                       'js/vendor/angular.min.js',
-                      //'bower_components/angular/angular.js',
 
                       'js/vendor/lodash.min.js',
                       'js/vendor/d3.min.js',
@@ -51,6 +57,7 @@ module.exports = function(grunt){
                       'js/vendor/highcharts-more.js',
                       'js/vendor/highcharts-exporting.js',
                       'js/vendor/highcharts-data.js',
+                      'js/vendor/highcharts-3d.js',
 
                       'js/vendor/filtrex.js',
                       'js/vendor/FileSaver.js',
@@ -80,27 +87,29 @@ module.exports = function(grunt){
                 src: [
                       //Controllers and Applications
                       'js/app.js',
-                      'js/results-representation.js',
-                      'js/modal.js',
+                      'js/results-view-table/controller/results-representation.js',
+                      'js/results-view-table/controller/modal.js',
 
                       //Services
-                      'js/csv-service.js',
-                      'js/color-service.js',
+                      'js/results-view-table/services/csv-service.js',
+                      'js/results-view-table/services/color-service.js',
 
                       //View Directives
-                      'js/protein-sequence-view.js',
-                      'js/ambiguity-plot.js',
+                      'js/results-view-table/directives/protein-sequence-view.js',
+                      'js/results-view-table/directives/ambiguity-plot.js',
 
                       //Component Directives
-                      'js/fragment-ion.js',
-                      'js/resizeable.js',
-                      'js/save-csv.js',
-                      'js/html-popover.js',
-                      'js/help-menu.js',
+                      'js/results-view-table/directives/fragment-ion.js',
+                      'js/results-view-table/directives/resizeable.js',
+                      'js/results-view-table/directives/save-csv.js',
+                      'js/results-view-table/directives/html-popover.js',
+                      'js/results-view-table/directives/help-menu.js',
 
                       //Filters
-                      'js/highlight-modifications.js',
-                      'js/scientific-notation.js',
+                      'js/results-view-table/filters/highlight-modifications.js',
+                      'js/results-view-table/filters/scientific-notation.js',
+
+                      'js/lib/**.js',
 
                      ],
                 dest: "js/app.concat.js"
@@ -123,15 +132,27 @@ module.exports = function(grunt){
                     "css/style.less",
                 ],
                 tasks: ["less", 'concat:css'],
+            },
+            templates: {
+              files: [
+                "templates/*.html"
+              ],
+              tasks: ["embedTemplates"]
             }
+
         },
     })
-
+    grunt.registerMultiTask("embedTemplates", "Wraps Angular Templates in <script> tags and embeds them in an HTML document,\
+      using the template's path as its id field", function(args){
+        var done = this.async()
+        embedTemplates(this.data.hostDocumentPath, this.data.templateDirectoryPath, this.data.outfilePath)
+        done(true);
+    })
     grunt.loadNpmTasks('grunt-contrib-coffee');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-ng-annotate');
 
-    grunt.registerTask('default', ['coffee', "less", "concat", "watch"]);
+    grunt.registerTask('default', ['coffee', "less", "concat", "embedTemplates", "watch"]);
 }

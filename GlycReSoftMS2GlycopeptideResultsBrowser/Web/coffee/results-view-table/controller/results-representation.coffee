@@ -11,6 +11,7 @@ do (()->
         _.forEach(clustered, (matches, key) ->
                 for match in matches
                     match['groupBy'] = id
+                    match['groupBySize'] = matches.length;
                 id++
             )
         return predictions
@@ -18,7 +19,6 @@ do (()->
 
     applyFiltrex = (predictions, filtrexExpr) ->
         filt = compileExpression(filtrexExpr)
-        console.log(filt, filt.js)
         filterResults = _.map(predictions, filt)
         passed = []
         for i in [0...predictions.length]
@@ -39,7 +39,6 @@ do (()->
             $scope.predictions = groupedResults
             $scope.filtrexError = false
             return groupedResults
-            #console.log("Complete")
         catch ex
             console.log "in catch"
             console.log(ex, $scope.filtrexError)
@@ -70,9 +69,7 @@ do (()->
     focusRow = ($scope, targetRowIndex) ->
         grid = $scope.gridOptions.ngGrid
         position = (grid.rowMap[targetRowIndex] * grid.config.rowHeight)
-        console.log(grid.$viewport)
         grid.$viewport.scrollTop(position)
-        console.log(grid.$viewport)
 
     # Start-up logic for the Controller
     activateFn = ($scope, $window, $filter) ->
@@ -102,12 +99,16 @@ do (()->
             filtrex: "Mean Peptide Coverage > 0"
         }
         requireStubIons: {
-            label: "Require Stub Ions Matches"
+            label: "Require Stub Ion Matches"
             filtrex: "Stub Ion Count > 0"
         }
         requireIonsWithHexNAc: {
-            label: "Require Peptide Backbone Ion Fragmentss with HexNAc Matches"
-            filtrex: "(% Y Ion With HexNAc Coverage + % B Ion With HexNAc Coverage) > 0"
+            label: "Require Peptide Backbone Ion Fragment with HexNAc Matches"
+            filtrex: "Mean PeptideHexNAc Coverage > 0"
+        }
+        requirePeptideLongerThanN: {
+            label: "Require Peptide longer than 9 AA"
+            filtrex: "AA Length > 9"
         }
     }
 
@@ -135,8 +136,10 @@ do (()->
             $scope._predictions = []
             $scope._predictionsReceiver = []
 
+            $scope.name = "GlycReSoft 2 Tandem MS Glycopeptide Analyzer"
             $scope.params = {}
             $scope.headerSubstituitionDictionary = {}
+
 
             $scope.params.filtrexExpr = "MS2 Score > 0.2"
             $scope.params.currentGroupingRule = $scope.groupingRules.ms1ScoreObsMass
@@ -147,7 +150,6 @@ do (()->
             $scope.ping = (args) -> console.log("ping", arguments, $scope)
 
             $scope.extendFiltrex = (expr) ->
-                console.log "Extending Filtrex with #{expr}"
                 if $scope.params.filtrexExpr.length > 0
                     $scope.params.filtrexExpr += " and " + expr
                 else
@@ -158,7 +160,6 @@ do (()->
                 expr = $scope.params.filtrexExpr.toLowerCase()
                 for column, key of dictionary
                     expr = expr.replace(column, key)
-                console.log expr
                 results = applyFiltrex($scope._predictions, expr)
                 # Sort without negating MS2_Score because the data is pre-sorted and does not need to be
                 # reversed.
@@ -166,7 +167,8 @@ do (()->
                 groupedResults = setGroupBy($scope.groupByKey, orderedResults)
                 return groupedResults
 
-            $scope.sendRenderPlotEvt = () -> $scope.$broadcast("ambiguityPlot.renderPlot", {predictions: $scope.predictions})
+            $scope.sendRenderPlotEvt = () ->
+                $scope.$broadcast("ambiguityPlot.renderPlot", {predictions: $scope.predictions})
             $scope.sendUpdateProteinViewEvt = () -> $scope.$broadcast("proteinSequenceView.updateProteinView", {predictions: $scope.predictions})
             $scope.setGroupBy = (grouping, predictions = null) ->
                 $scope.groupByKey = grouping
@@ -182,13 +184,18 @@ do (()->
                     if topIndex is Infinity
                         return false
                     focusRow($scope, topIndex)
+                    return 0
 
             $scope.buildHeaderSubstituitionDictionary = ->
                 dictionary = {}
                 dictionary.NAME_MAP = []
-                BLACK_LIST = ["Peptide Span"]
+                BLACK_LIST = {
+                    "Peptide Span": true, "b Ions": true, "b Ions With HexNAc": true,
+                    "y Ions": true, "y Ions With HexNAc": true, "Stub Ions": true,
+                    "Oxonium Ions": true
+                }
                 for column in $scope.gridOptions.columnDefs
-                    if not (column.displayName in BLACK_LIST)
+                    if not (BLACK_LIST[column.displayName])
                         dictionary.NAME_MAP.push column.displayName
                         dictionary[column.displayName.toLowerCase()] = column.field
                 dictionary["Start AA".toLowerCase()] = "startAA"
@@ -201,17 +208,25 @@ do (()->
                 dictionary.NAME_MAP.push "Oxonium Ion Count"
                 dictionary["Stub Ion Count".toLowerCase()] = "numStubs"
                 dictionary.NAME_MAP.push "Stub Ion Count"
-                dictionary["% Y Ion Coverage".toLowerCase()] = "percent_y_ion_coverage"
-                dictionary.NAME_MAP.push "% Y Ion Coverage"
-                dictionary["% B Ion Coverage".toLowerCase()] = "percent_b_ion_coverage"
-                dictionary.NAME_MAP.push "% B Ion Coverage"
-                dictionary["% Y Ion With HexNAc Coverage".toLowerCase()] = "percent_y_ion_with_HexNAc_coverage"
-                dictionary.NAME_MAP.push "% Y Ion With HexNAc Coverage"
-                dictionary["% B Ion With HexNAc Coverage".toLowerCase()] = "percent_b_ion_with_HexNAc_coverage"
-                dictionary.NAME_MAP.push "% B Ion With HexNAc Coverage"
+                dictionary["% y Ion Coverage".toLowerCase()] = "percent_y_ion_coverage"
+                dictionary.NAME_MAP.push "% y Ion Coverage"
+                dictionary["% b Ion Coverage".toLowerCase()] = "percent_b_ion_coverage"
+                dictionary.NAME_MAP.push "% b Ion Coverage"
+                dictionary["% y Ion With HexNAc Coverage".toLowerCase()] = "percent_y_ion_with_HexNAc_coverage"
+                dictionary.NAME_MAP.push "% y Ion With HexNAc Coverage"
+                dictionary["% b Ion With HexNAc Coverage".toLowerCase()] = "percent_b_ion_with_HexNAc_coverage"
+                dictionary.NAME_MAP.push "% b Ion With HexNAc Coverage"
 
                 return dictionary
 
+
+            headerCellTemplateNoPin = '<div class="ngHeaderSortColumn {{col.headerClass}}" ng-style="{\'cursor\': col.cursor}" ng-class="{ \'ngSorted\': !noSortVisible }">
+                                        <div ng-click="col.sort($event)" ng-class="\'colt\' + col.index" class="ngHeaderText">{{col.displayName}}</div>
+                                        <div class="ngSortButtonDown" ng-show="col.showSortButtonDown()"></div>
+                                        <div class="ngSortButtonUp" ng-show="col.showSortButtonUp()"></div>
+                                        <div class="ngSortPriority">{{col.sortPriority}}</div>
+                                    </div>
+                                    <div ng-show="col.resizable" class="ngHeaderGrip" ng-click="col.gripClick($event)" ng-mousedown="col.gripOnMouseDown($event)"></div>'
 
             $scope.gridOptions = {
                 data: "predictions"
@@ -224,11 +239,20 @@ do (()->
 
                 columnDefs:[
                     {
+                        field:'scan_id'
+                        width:90
+                        pinned:true
+                        displayName: "Scan ID"
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
+                    }
+                    {
                         field:'MS2_Score'
                         width:90
                         pinned: true
                         displayName:"MS2 Score"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'MS1_Score'
@@ -236,6 +260,7 @@ do (()->
                         pinned: true
                         displayName:"MS1 Score"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'Obs_Mass'
@@ -243,19 +268,22 @@ do (()->
                         pinned: true
                         displayName:"Observed Mass"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'vol'
                         width:100
                         pinned: true
                         displayName:"Volume"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:3}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'ppm_error'
                         width:90
                         displayName:"PPM Error"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|scientificNotation|number:4}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'Glycopeptide_identifier'
@@ -263,24 +291,35 @@ do (()->
                         displayName:"Glycopeptide Sequence"
                         cellClass: "matched-ions-cell glycopeptide-identifier"
                         cellTemplate: '<div><div class="ngCellText" ng-bind-html="row.getProperty(col.field)|highlightModifications"></div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'meanCoverage'
                         width:180
                         displayName:"Mean Peptide Coverage"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:3}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
+                    }
+                    {
+                        field:'meanHexNAcCoverage'
+                        width:180
+                        displayName:"Mean PeptideHexNAc Coverage"
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:3}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'percentUncovered'
                         width:165
                         displayName:"% Peptide Uncovered"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field) * 100|number:2}}</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field: "startAA"
                         width: 180
                         displayName: "Peptide Span"
                         cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)}}-{{row.entity.endAA}}&nbsp;({{row.entity.peptideLens}})</div></div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'Oxonium_ions',
@@ -295,11 +334,11 @@ do (()->
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'Stub_ions',
                         width: 340
-
                         displayName:"Stub Ions"
                         headerClass: null
                         cellClass: "stacked-ions-cell-grid"
@@ -310,11 +349,12 @@ do (()->
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'b_ion_coverage',
                         width: 340
-                        displayName:"B Ions"
+                        displayName:"b Ions"
                         headerClass: null
                         cellClass: "stacked-ions-cell-grid"
                         cellTemplate:
@@ -324,11 +364,12 @@ do (()->
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'y_ion_coverage',
                         width: 340
-                        displayName:"Y Ions"
+                        displayName:"y Ions"
                         headerClass: null
                         cellClass: "stacked-ions-cell-grid"
                         cellTemplate:
@@ -338,11 +379,12 @@ do (()->
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'b_ions_with_HexNAc',
                         width: 340
-                        displayName:"B Ions with HexNAc"
+                        displayName:"b Ions with HexNAc"
                         headerClass: null
                         cellClass: "stacked-ions-cell-grid"
                         cellTemplate:
@@ -352,11 +394,12 @@ do (()->
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'y_ions_with_HexNAc',
                         width: 340
-                        displayName:"Y Ions with HexNAc"
+                        displayName:"y Ions with HexNAc"
                         headerClass: null
                         cellClass: "stacked-ions-cell-grid"
                         cellTemplate:
@@ -366,10 +409,12 @@ do (()->
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
+                        headerCellTemplate: headerCellTemplateNoPin
                     }
                 ]
-                # Class setting in outer-most div interpolates color class from the prediction's groupBy
-                rowTemplate: '<div style="height: 100%" class="c{{row.entity.groupBy % 6}}">
+                # Class setting in outer-most div interpolates color class from the prediction's groupBy.
+                # Only color if the group is larger than 1 match
+                rowTemplate: '<div style="height: 100%" class="{{row.entity.groupBySize > 1 ? \'c\' + row.entity.groupBy % 6 : \'cX\'}}">
                                 <div ng-style="{ \'cursor\': row.cursor }" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell matched-ions-cell">
                                     <div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }"> </div>
                                         <div ng-cell>

@@ -14,6 +14,7 @@
 #save-csv-btn {
     float: left;
 }
+
 #help-btn {
     float: right;
 }
@@ -21,6 +22,9 @@
 //Overrides existing rule to let the popover stretch
 .popover {
     max-width: 400px !important;
+    .popover-content{
+        max-width: 400px !important;
+    }
 }
 
 //For the Filtrex Help Popovers only
@@ -34,13 +38,16 @@
         }
     }
 }
-//
+
+//Grid Cells
 .matched-ions-cell{
     vertical-align: middle !important;
+    text-align: center;
     margin: 0px !important;
 }
 
 .glycopeptide-identifier{
+    font-size: 1em;
     white-space: normal !important;
     word-wrap: break-word;
     .ngCellText{
@@ -74,10 +81,15 @@
 
 //ngGrid Style Options
 .gridStyle{
-    margin: 2px;
+    margin: 0.5%;
     border: 1px solid rgb(212,212,212);
-    width: 100%;
-    height: 800px;
+    width: 99%;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.ngHeaderCell{
+    text-align: center;
 }
 
 .ngRow.selected{
@@ -87,14 +99,17 @@
     }
 }
 
+.cX{
+    background-color: inherit;
+}
 .c0{
-    background-color: lighten(orange, 40%)
+    background-color: lighten(orange, 40%) ;
 }
 .c1{
     background-color: lighten(skyblue, 10%);
 }
 .c2{
-    background-color: lighten(green, 60%);
+    background-color: lighten(green, 60%) ;
 }
 .c3{
     background-color: lighten(yellow, 40%);
@@ -103,25 +118,20 @@
     background-color: lighten(red, 45%);
 }
 .c5{
-    background-color: lighten(white, 60%);
+    background-color: lighten(violet, 20%);
 }
 
 //Filter Controls
 #grid-controls {
     display: table;
     width: 100%;
-    div {
-        display: table-row;
-        div {
-            display: table-cell;
-            width: 50%;
-            text-align: left;
-        }
-    }
 }
 
 #filtrex-control{
     padding: 25px;
+}
+#filtrex-control-inner{
+    width: 80%;
 }
 
 .filtrex-ctrl-anchor {
@@ -137,17 +147,22 @@
 }
 
 #filtrex-control-input{
-    width: 800px;
+    width: 100%;
     clear: both;
     float: none;
     border-radius: 5px;
 }
 
 //Ambiguity Plot Table CSS Options
+
 .ambiguity-peptide-sequences-container {
     margin: 25px;
     border: lightgrey 1px solid;
     border-radius: 3px;
+
+    .glycopeptide-identifier {
+        max-width: 600px;
+    }
 }
 
 .ambiguity-peptide-attributes {
@@ -159,7 +174,18 @@
     }
 }
 
+.custom-fn-menu{
+    * {
+        margin: 15px;
+    }
+}
+
 .plot-grouping-fn-selector-container {
+    margin-left: 10px;
+    //display: inline;
+    &.custom-fn-menu{
+        margin-left: 20px;
+    }
     select{
         margin: 15px;
         padding: 5px;
