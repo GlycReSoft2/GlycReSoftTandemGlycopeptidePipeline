@@ -15,20 +15,16 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
         /// <summary>
         /// Currently unused, but intended for discriminating between different versions of the configuration.
         /// </summary>
-        public static double SchemaVersion = 0.2;
+        public static double SchemaVersion = 0.4;
         public double Version { get; set; }
 
         public String PythonInterpreterPath { get; set; }
-        public String RscriptInterpreterPath { get; set; }
-        public Boolean RDependenciesInstalled { get; set; }
         public Boolean PythonDependenciesInstalled { get; set; }
 
         public ScriptingSettings()
         {
             Version = SchemaVersion;
             PythonInterpreterPath = "";
-            RscriptInterpreterPath = "";
-            RDependenciesInstalled = false;
             PythonDependenciesInstalled = false;
         }
 

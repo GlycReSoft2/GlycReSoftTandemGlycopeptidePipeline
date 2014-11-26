@@ -112,7 +112,7 @@
         window.registerDataChange = function (data, name){
             try{
                 ctrl = angular.element("#classifier-results").controller()
-                objects = csvService.setDefaultValues(csvService.deserializeAfterParse(data))
+                objects = CsvService.setDefaultValues(CsvService.deserializeAfterParse(data))
                 ctrl.$apply(function(){
                         ctrl.name = name === undefined ? ctrl.name : name;
                         ctrl._predictionsReceiver = objects
@@ -128,7 +128,7 @@
                 if(err != null) console.log(err)
                 testObjects = _.cloneDeep(data)
                 ctrl = angular.element("#classifier-results").controller()
-                objects = csvService.setDefaultValues(csvService.deserializeAfterParse(data))
+                objects = CsvService.setDefaultValues(CsvService.deserializeAfterParse(data))
                 ctrl.$apply(function(){
                     ctrl._predictionsReceiver = objects
                 })
@@ -361,7 +361,7 @@
 </article>
 </script><script type="text/ng-template" id="templates/modal-template.html">
 <div class="modal-header">
-    <h3 class="modal-title">Im a modal!</h3>
+    <h3 class="modal-title">I'm a modal!</h3>
 </div>
 <div class="modal-body">
     <ul>

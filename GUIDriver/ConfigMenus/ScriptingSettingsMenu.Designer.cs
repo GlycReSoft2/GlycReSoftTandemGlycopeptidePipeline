@@ -30,14 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScriptingSettingsMenu));
             this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.PythonExecutablePathTextBox = new System.Windows.Forms.TextBox();
-            this.RscriptExecutablePathTextBox = new System.Windows.Forms.TextBox();
             this.OkayButton = new System.Windows.Forms.Button();
             this.CancelMenuButton = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.InstallPythonDependenciesButton = new System.Windows.Forms.Button();
-            this.InstallRDependenciesButton = new System.Windows.Forms.Button();
+            this.CheckPythonDependenciesButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -49,15 +46,6 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Python Executable Path";
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(9, 82);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(121, 13);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Rscript Executable Path";
-            // 
             // PythonExecutablePathTextBox
             // 
             this.PythonExecutablePathTextBox.Location = new System.Drawing.Point(12, 29);
@@ -65,15 +53,9 @@
             this.PythonExecutablePathTextBox.Size = new System.Drawing.Size(266, 20);
             this.PythonExecutablePathTextBox.TabIndex = 2;
             // 
-            // RscriptExecutablePathTextBox
-            // 
-            this.RscriptExecutablePathTextBox.Location = new System.Drawing.Point(12, 98);
-            this.RscriptExecutablePathTextBox.Name = "RscriptExecutablePathTextBox";
-            this.RscriptExecutablePathTextBox.Size = new System.Drawing.Size(266, 20);
-            this.RscriptExecutablePathTextBox.TabIndex = 3;
-            // 
             // OkayButton
             // 
+            this.OkayButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.OkayButton.Location = new System.Drawing.Point(116, 227);
             this.OkayButton.Name = "OkayButton";
             this.OkayButton.Size = new System.Drawing.Size(75, 23);
@@ -84,6 +66,7 @@
             // 
             // CancelMenuButton
             // 
+            this.CancelMenuButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.CancelMenuButton.Location = new System.Drawing.Point(197, 227);
             this.CancelMenuButton.Name = "CancelMenuButton";
             this.CancelMenuButton.Size = new System.Drawing.Size(75, 23);
@@ -95,45 +78,33 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 152);
+            this.label3.Location = new System.Drawing.Point(9, 81);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(272, 65);
+            this.label3.Size = new System.Drawing.Size(234, 65);
             this.label3.TabIndex = 6;
             this.label3.Text = resources.GetString("label3.Text");
             // 
-            // InstallPythonDependenciesButton
+            // CheckPythonDependenciesButton
             // 
-            this.InstallPythonDependenciesButton.Location = new System.Drawing.Point(12, 55);
-            this.InstallPythonDependenciesButton.Name = "InstallPythonDependenciesButton";
-            this.InstallPythonDependenciesButton.Size = new System.Drawing.Size(156, 23);
-            this.InstallPythonDependenciesButton.TabIndex = 7;
-            this.InstallPythonDependenciesButton.Text = "Install Python Dependencies";
-            this.InstallPythonDependenciesButton.UseVisualStyleBackColor = true;
-            this.InstallPythonDependenciesButton.Click += new System.EventHandler(this.InstallPythonDependenciesButton_Click);
-            // 
-            // InstallRDependenciesButton
-            // 
-            this.InstallRDependenciesButton.Location = new System.Drawing.Point(12, 124);
-            this.InstallRDependenciesButton.Name = "InstallRDependenciesButton";
-            this.InstallRDependenciesButton.Size = new System.Drawing.Size(156, 23);
-            this.InstallRDependenciesButton.TabIndex = 8;
-            this.InstallRDependenciesButton.Text = "Install R Dependencies";
-            this.InstallRDependenciesButton.UseVisualStyleBackColor = true;
-            this.InstallRDependenciesButton.Click += new System.EventHandler(this.InstallRDependenciesButton_Click);
+            this.CheckPythonDependenciesButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.CheckPythonDependenciesButton.Location = new System.Drawing.Point(12, 55);
+            this.CheckPythonDependenciesButton.Name = "CheckPythonDependenciesButton";
+            this.CheckPythonDependenciesButton.Size = new System.Drawing.Size(156, 23);
+            this.CheckPythonDependenciesButton.TabIndex = 7;
+            this.CheckPythonDependenciesButton.Text = "Check Python Dependencies";
+            this.CheckPythonDependenciesButton.UseVisualStyleBackColor = true;
+            this.CheckPythonDependenciesButton.Click += new System.EventHandler(this.CheckPythonDependenciesButton_Click);
             // 
             // ScriptingSettingsMenu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 262);
-            this.Controls.Add(this.InstallRDependenciesButton);
-            this.Controls.Add(this.InstallPythonDependenciesButton);
+            this.Controls.Add(this.CheckPythonDependenciesButton);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.CancelMenuButton);
             this.Controls.Add(this.OkayButton);
-            this.Controls.Add(this.RscriptExecutablePathTextBox);
             this.Controls.Add(this.PythonExecutablePathTextBox);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "ScriptingSettingsMenu";
             this.Text = "ScriptingSettingsMenu";
@@ -145,13 +116,10 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox PythonExecutablePathTextBox;
-        private System.Windows.Forms.TextBox RscriptExecutablePathTextBox;
         private System.Windows.Forms.Button OkayButton;
         private System.Windows.Forms.Button CancelMenuButton;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button InstallPythonDependenciesButton;
-        private System.Windows.Forms.Button InstallRDependenciesButton;
+        private System.Windows.Forms.Button CheckPythonDependenciesButton;
     }
 }

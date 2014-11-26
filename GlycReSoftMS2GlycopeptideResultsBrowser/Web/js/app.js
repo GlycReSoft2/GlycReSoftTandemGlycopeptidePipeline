@@ -17,3 +17,9 @@ Array.prototype.mean = function() {
   total = this.sum();
   return total / this.length;
 };
+
+if (Number.isInteger == null) {
+  Number.isInteger = function(nVal) {
+    return typeof nVal === "number" && isFinite(nVal) && nVal > -9007199254740992 && nVal < 9007199254740992 && Math.floor(nVal) === nVal;
+  };
+}

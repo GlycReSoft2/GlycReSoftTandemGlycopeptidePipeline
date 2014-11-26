@@ -20,6 +20,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
     public partial class WebResultsViewer : Form
     {
         public String DataProvider;
+        public String FileName;
         public ResultsRepresentation Model;
 
         public WebResultsViewer(ResultsRepresentation modelData)
@@ -28,7 +29,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
             this.Model = modelData;
 
             this.DataProvider = BootstrapModelString(Model);
-
+            this.FileName = Path.GetFileName(Model.SourceFile);
 
             BrowserCtrl.IsWebBrowserContextMenuEnabled = true;
             var indexURI = new Uri(Path.Combine(Application.StartupPath, "Web", "index.html")).AbsoluteUri;
@@ -38,12 +39,16 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
             //Set up page, feeding in data and registering native-web interfaces
             BrowserCtrl.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(delegate(Object o, WebBrowserDocumentCompletedEventArgs e)
             {
-                JavaScriptAction(@"window.objects = window.external.DataProvider;                    registerDataChange(d3.csv.parse(window.external.DataProvider));");
+                JavaScriptAction(@"window.objects = window.external.DataProvider; 
+                                   registerDataChange(d3.csv.parse(window.external.DataProvider), window.external.FileName);
+                                   ");
                 //Remove previously registered click handler and adds native save
                 //function call
-                JavaScriptAction("$('#save-csv-btn').off('click').click(function(evt){window.external.SaveResultsToFile()})");
+                JavaScriptAction("$('#save-csv-btn .save-all-results-anchor').off('click').click(function(evt){window.external.SaveResultsToFile()})");
                 //JavaScriptAction("console.log = window.external.ExternLog");
-            });          
+            });
+            BrowserCtrl.ScriptErrorsSuppressed = false;
+
         }
 
         public WebResultsViewer()
@@ -57,7 +62,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
             BrowserCtrl.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(delegate(Object o, WebBrowserDocumentCompletedEventArgs e)
             {
                 JavaScriptAction("registerDataChange(d3.csv.parse(window.external.DataProvider));");
-                JavaScriptAction("$('#save-csv').click(function(evt){window.external.ExternLog('logging')})");
+                JavaScriptAction("$('#save-csv .save-all-results-anchor').click(function(evt){window.external.ExternLog('save-all-clicked')})");
             });
             BrowserCtrl.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(delegate(Object o, WebBrowserDocumentCompletedEventArgs e)
             {              
@@ -125,9 +130,11 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
             return modelString;
         }
 
-        public void ExternLog(params object[] messages)
+        public void ExternLog(params string[] messages)
         {
-            foreach (object msg in messages)
+            Console.WriteLine("Logging");
+            Console.WriteLine(messages);
+            foreach (string msg in messages)
             {
                 Console.WriteLine(msg);
             }

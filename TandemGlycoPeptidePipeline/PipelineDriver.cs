@@ -20,7 +20,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public String MS1MatchFilePath;
         public String GlycosylationSiteFilePath;
         public String MS2DeconFilePath;
-        public String GoldStandardFilePath;
+        public String ModelFilePath;
         
 
         public double MS1MatchingTolerance;
@@ -40,7 +40,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         /// <param name="MS1MatchFilePath"></param>
         /// <param name="glycosylationSiteFilePath"></param>
         /// <param name="MS2DeconFilePath"></param>
-        /// <param name="goldStandardPath"></param>
+        /// <param name="modelFilePath"></param>
         /// <param name="pythonInterpreterPath">
         /// Passed along to the ScriptManager, used to locate the Python Interpreter executable
         /// </param>
@@ -51,17 +51,17 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         /// Passed along to the ScriptManager, used to locate the script pipeline files
         /// </param>
         public AnalysisPipeline(String MS1MatchFilePath, String glycosylationSiteFilePath,
-            String MS2DeconFilePath, String goldStandardPath = null,
+            String MS2DeconFilePath, String modelFilePath = null,
             String outputFilePath = null, double ms1MatchingTolerance = 1e-5,
             double ms2MatchingTolerance = 2e-5, String[] constantModifications = null,
-            String[] variableModifications = null, String method = "default",
+            String[] variableModifications = null, String method = "full_random_forest",
             String pythonInterpreterPath = null, String rscriptPath = null, 
             String scriptsRoot = null)
         {
             this.MS1MatchFilePath = MS1MatchFilePath;
             this.GlycosylationSiteFilePath = glycosylationSiteFilePath;
             this.MS2DeconFilePath = MS2DeconFilePath;
-            this.GoldStandardFilePath = goldStandardPath;
+            this.ModelFilePath = modelFilePath;
 
             this.ResultFilePath = outputFilePath;
             this.ResultsTable = null;
@@ -95,7 +95,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             String outfile = Scripter.RunClassificationPythonPipeline(this.MS1MatchFilePath, 
                 this.GlycosylationSiteFilePath, 
                 this.MS2DeconFilePath, 
-                goldStandardModelDataFilePath:this.GoldStandardFilePath,
+                modelDataFilePath:this.ModelFilePath,
                 ms1MatchingTolerance:this.MS1MatchingTolerance, 
                 ms2MatchingTolerance:this.MS2MatchingTolerance,
                 constantModifications:this.ConstantModifications,
@@ -123,6 +123,15 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
 
             ResultsRepresentation model = new ResultsRepresentation(outfile);
             return model;
+        }
+
+        public ResultsRepresentation RunReclassification(String targetFilePath, String modelFilePath)
+        {
+            String outfile = Scripter.RunReclassifyWithModelTask(targetFilePath, modelFilePath, Method);
+            ResultsRepresentation resultsTable = new ResultsRepresentation(outfile);
+            this.ResultFilePath = outfile;
+            this.ResultsTable = resultsTable;
+            return resultsTable;
         }
 
     }

@@ -41,11 +41,11 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             PreparedModels = BuiltInModels.Load();
             
             //Bind Controller to Interface Labels
-            this.MS1MatchFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "MS1MatchFilePath"));
-            this.MS2DeconvolutionFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "MS2DeconvolutionFilePath"));
-            this.GlycosylationSiteFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "GlycosylationSiteFilePath"));
-            this.ModelFilePathLabel.DataBindings.Add(new Binding("Text", Controller, "ModelFilePath"));
-            this.ProteinProspectorMSDigestXMLLabel.DataBindings.Add(new Binding("Text", Controller, "ProteinProspectorMSDigestFilePath"));
+            this.MS1MatchFilePathLabel.DataBindings.Add(new FilePathTrimmingBinding("Text", Controller, "MS1MatchFilePath"));
+            this.MS2DeconvolutionFilePathLabel.DataBindings.Add(new FilePathTrimmingBinding("Text", Controller, "MS2DeconvolutionFilePath"));
+            this.GlycosylationSiteFilePathLabel.DataBindings.Add(new FilePathTrimmingBinding("Text", Controller, "GlycosylationSiteFilePath"));
+            this.ModelFilePathLabel.DataBindings.Add(new FilePathTrimmingBinding("Text", Controller, "ModelFilePath"));
+            this.ProteinProspectorMSDigestXMLLabel.DataBindings.Add(new FilePathTrimmingBinding("Text", Controller, "ProteinProspectorMSDigestFilePath"));
 
             //Initialize ComboBox with label defining function of ComboBox
             SelectModelComboBox.Items.Add(SELECT_MODEL_DEFAULT);
@@ -59,9 +59,9 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             SelectModelComboBox.SelectedItem = SELECT_MODEL_DEFAULT;
 
 
-            if (!(ConfigurationManager.Scripting.RDependenciesInstalled && ConfigurationManager.Scripting.PythonDependenciesInstalled))
+            if (!ConfigurationManager.Scripting.PythonDependenciesInstalled)
             {
-                MessageBox.Show("Hello, if you have not yet installed the Python and R dependencies, please do so by clicking the Scripting Settings button and configure the menu options there.");
+                MessageBox.Show("If you have not yet verified you have installed all the Python dependencies, please go to the Scripting Settings Menu and use the verification command there.\n\r\n\rYou will need Pandas and Scikit-Learn, which depend upon NumPy and SciPy. If you don't yet have these, I suggest you try installing a scientific Python distribution like Anaconda(http://continuum.io/downloads) or Canopy(https://store.enthought.com/)");
             }
         }
        
@@ -133,7 +133,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             }
         }
 
-        private void SetModelFilePath_Action(object sender, EventArgs e)
+        private bool SetModelFilePath_Action(object sender, EventArgs e)
         {
             DialogResult modelFileDialogResult = openFileDialog1.ShowDialog();
             if (modelFileDialogResult == DialogResult.OK)
@@ -141,13 +141,17 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
                 try
                 {
                     Controller.ModelFilePath = openFileDialog1.FileName;
+                    return true;
                 }
                 catch (IOException ex)
                 {
                     MessageBox.Show("Could not open " + openFileDialog1.FileName +
                         ". Error: " + ex.Message);
+                    return false;
                 }
+                
             }
+            return false;
         }
 
 
@@ -299,8 +303,15 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
         /// <param name="e"></param>
         private void classifyWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            var classifiedData = Controller.ClassifyGlycopeptideTandemMS();
-            e.Result = classifiedData;
+            try
+            {
+                var classifiedData = Controller.ClassifyGlycopeptideTandemMS();
+                e.Result = classifiedData;
+            }
+            catch (TandemGlycoPeptidePipelineException ex)
+            {            
+                Console.WriteLine(sender);
+            }
         }
 
         private void ScriptingSettingsButton_Click(object sender, EventArgs e)
@@ -325,7 +336,13 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                SetModelFilePath_Action(sender, e);
+                bool didSelect = SetModelFilePath_Action(sender, e);
+                //If the user didn't actually select a model, cancelling the dialog, do nothing
+                if (!didSelect)
+                {
+                    return;
+                }
+                    
                 model = new ResultsRepresentation(Controller.ModelFilePath);
             }
             
@@ -390,6 +407,48 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
                 }
             }
 
+        }
+
+        private void ReclassifyResultsButton_Click(object sender, EventArgs e)
+        {
+            if (Controller.ModelFilePath == null)
+            {
+                MessageBox.Show("Please select a model first");
+                SelectModelComboBox.Focus();
+                return;
+            }
+            DialogResult targetFileDialogResult = openFileDialog1.ShowDialog();
+            if (targetFileDialogResult == DialogResult.OK)
+            {
+                try
+                {
+                    String targetFilePath = openFileDialog1.FileName;
+                    BackgroundWorker reclassifyWorker = new BackgroundWorker();
+                    reclassifyWorker.DoWork += reclassifyWorker_DoWork;
+                    reclassifyWorker.RunWorkerCompleted += classifyWorker_RunWorkerCompleted;
+                    reclassifyWorker.RunWorkerAsync(targetFilePath);
+                    WaitScreen.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred while processing this task: " + ex.Message);
+                    WaitScreen.Close();
+                }
+            }
+        }
+
+        void reclassifyWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            String targetFilePath = e.Argument as String;
+            try
+            {
+                var classifiedData = Controller.ReclassifyWithModel(targetFilePath);
+                e.Result = classifiedData;
+            }
+            catch (TandemGlycoPeptidePipelineException ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
 

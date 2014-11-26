@@ -9,6 +9,7 @@
   "author": "JKlein",
   "license": "ISC",
   "devDependencies": {
+    "cheerio": "^0.17.0",
     "coffee-script": "^1.7.1",
     "grunt": "^0.4.5",
     "grunt-contrib-coffee": "^0.11.0",

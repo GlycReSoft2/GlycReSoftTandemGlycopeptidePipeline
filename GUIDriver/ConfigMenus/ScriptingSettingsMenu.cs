@@ -20,7 +20,6 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
             InitializeComponent();
             Console.WriteLine(ConfigurationManager.Scripting);
             this.PythonExecutablePathTextBox.Text = ConfigurationManager.Scripting.PythonInterpreterPath;
-            this.RscriptExecutablePathTextBox.Text = ConfigurationManager.Scripting.RscriptInterpreterPath;
         }
 
         private void CancelButton_Click(object sender, EventArgs e)
@@ -31,7 +30,6 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
         private void OkayButton_Click(object sender, EventArgs e)
         {
             ConfigurationManager.Scripting.PythonInterpreterPath = this.PythonExecutablePathTextBox.Text;
-            ConfigurationManager.Scripting.RscriptInterpreterPath = this.RscriptExecutablePathTextBox.Text;
             try
             {
                 ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
@@ -43,37 +41,20 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
             this.Close();
         }
 
-        private void InstallPythonDependenciesButton_Click(object sender, EventArgs e)
+        private void CheckPythonDependenciesButton_Click(object sender, EventArgs e)
         {
-            ScriptManager scriptingManager = new ScriptManager(ConfigurationManager.Scripting.PythonInterpreterPath,
-                ConfigurationManager.Scripting.RscriptInterpreterPath);
+            ScriptManager scriptingManager = new ScriptManager(ConfigurationManager.Scripting.PythonInterpreterPath);
             try
             {
                 scriptingManager.VerifyFileSystemTargets();
+                Console.WriteLine("Ping");
                 scriptingManager.InstallPythonDependencies();
+                Console.WriteLine("Pong");
                 ConfigurationManager.Scripting.PythonDependenciesInstalled = true;
                 ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
                 MessageBox.Show(ConfigurationManager.Scripting.ToString());
             }
             catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void InstallRDependenciesButton_Click(object sender, EventArgs e)
-        {
-            ScriptManager scriptingManager = new ScriptManager(ConfigurationManager.Scripting.PythonInterpreterPath,
-                ConfigurationManager.Scripting.RscriptInterpreterPath);
-            try
-            {
-                scriptingManager.VerifyFileSystemTargets();
-                scriptingManager.InstallRDependencies();
-                ConfigurationManager.Scripting.RDependenciesInstalled = true;
-                ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
-                MessageBox.Show(ConfigurationManager.Scripting.ToString());
-            }
-            catch (ScriptingException ex)
             {
                 MessageBox.Show(ex.Message);
             }

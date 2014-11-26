@@ -203,6 +203,10 @@ table.glycan-composition-frequency-table th {
 table.glycan-composition-frequency-table tr td:first-child {
   font-weight: 900;
 }
+div.plot-modal .modal-content {
+  overflow: auto;
+  height: 80%;
+}
 .help-content {
   padding: 3px;
 }

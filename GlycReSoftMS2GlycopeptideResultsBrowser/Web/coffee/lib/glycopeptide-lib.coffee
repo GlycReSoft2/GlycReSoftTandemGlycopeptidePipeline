@@ -30,7 +30,7 @@ class GlycopeptideLib
 
         return stack
 
-    @parseModificationSites = (glycopeptide) ->
+    @parseModificationSites: (glycopeptide) ->
             sequence = glycopeptide.Glycopeptide_identifier
             regex = /(\(.+?\)|\[.+?\])/
             index = 0
@@ -51,3 +51,26 @@ class GlycopeptideLib
             return modifications
 
 
+class ProteinBackboneSpace
+    constructor: (@predictions, @options={}) ->
+        @stacks = _.groupBy @predictions, (p) -> [p.startAA, p.endAA]
+        for pileup, matches of @stacks
+            matches = matches.sort (a, b) ->
+                if a.MS2_Score < b.MS2_Score
+                    return -1
+                else if a.MS2_Score > b.MS2_Score
+                    return 1
+                return 0
+
+class GlycopeptideLib.Glycopeptide
+    constructor: (glycopeptide) ->
+        @data = glycopeptide
+        console.log(5)
+
+
+if(module?)
+    if not module.exports?
+        module.exports = {}
+
+    module.exports.GlycopeptideLib = GlycopeptideLib
+    module.exports.ProteinBackboneSpace = ProteinBackboneSpace

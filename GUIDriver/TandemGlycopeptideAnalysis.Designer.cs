@@ -48,12 +48,14 @@
             this.ViewModelButton = new System.Windows.Forms.Button();
             this.AlgorithmSettingsButton = new System.Windows.Forms.Button();
             this.ViewResultsButton = new System.Windows.Forms.Button();
+            this.ReclassifyResultsButton = new System.Windows.Forms.Button();
             this.FileSelectionPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // MS1MatchFilePathLoadButton
             // 
             this.MS1MatchFilePathLoadButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.MS1MatchFilePathLoadButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.MS1MatchFilePathLoadButton.Location = new System.Drawing.Point(12, 38);
             this.MS1MatchFilePathLoadButton.Name = "MS1MatchFilePathLoadButton";
             this.MS1MatchFilePathLoadButton.Size = new System.Drawing.Size(194, 23);
@@ -64,6 +66,7 @@
             // 
             // MS2DeconvolutionFilePathLoadButton
             // 
+            this.MS2DeconvolutionFilePathLoadButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.MS2DeconvolutionFilePathLoadButton.Location = new System.Drawing.Point(12, 67);
             this.MS2DeconvolutionFilePathLoadButton.Name = "MS2DeconvolutionFilePathLoadButton";
             this.MS2DeconvolutionFilePathLoadButton.Size = new System.Drawing.Size(194, 23);
@@ -74,6 +77,7 @@
             // 
             // GlycosylationSiteFilePathLoadButton
             // 
+            this.GlycosylationSiteFilePathLoadButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.GlycosylationSiteFilePathLoadButton.Location = new System.Drawing.Point(12, 96);
             this.GlycosylationSiteFilePathLoadButton.Name = "GlycosylationSiteFilePathLoadButton";
             this.GlycosylationSiteFilePathLoadButton.Size = new System.Drawing.Size(194, 23);
@@ -144,6 +148,7 @@
             // 
             // AddProteinProspectorMSDigestXmlFileButton
             // 
+            this.AddProteinProspectorMSDigestXmlFileButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.AddProteinProspectorMSDigestXmlFileButton.Location = new System.Drawing.Point(12, 125);
             this.AddProteinProspectorMSDigestXmlFileButton.Name = "AddProteinProspectorMSDigestXmlFileButton";
             this.AddProteinProspectorMSDigestXmlFileButton.Size = new System.Drawing.Size(194, 23);
@@ -183,9 +188,10 @@
             // CreateModelActionButton
             // 
             this.CreateModelActionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.CreateModelActionButton.Location = new System.Drawing.Point(21, 219);
+            this.CreateModelActionButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.CreateModelActionButton.Location = new System.Drawing.Point(21, 210);
             this.CreateModelActionButton.Name = "CreateModelActionButton";
-            this.CreateModelActionButton.Size = new System.Drawing.Size(95, 35);
+            this.CreateModelActionButton.Size = new System.Drawing.Size(95, 44);
             this.CreateModelActionButton.TabIndex = 7;
             this.CreateModelActionButton.Text = "Create Model";
             this.CreateModelActionButton.UseVisualStyleBackColor = true;
@@ -194,10 +200,11 @@
             // ClassifyMSMSSpectraActionButton
             // 
             this.ClassifyMSMSSpectraActionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.ClassifyMSMSSpectraActionButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.ClassifyMSMSSpectraActionButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ClassifyMSMSSpectraActionButton.Location = new System.Drawing.Point(21, 260);
             this.ClassifyMSMSSpectraActionButton.Name = "ClassifyMSMSSpectraActionButton";
-            this.ClassifyMSMSSpectraActionButton.Size = new System.Drawing.Size(95, 34);
+            this.ClassifyMSMSSpectraActionButton.Size = new System.Drawing.Size(95, 44);
             this.ClassifyMSMSSpectraActionButton.TabIndex = 8;
             this.ClassifyMSMSSpectraActionButton.Text = "Classify with Model";
             this.ClassifyMSMSSpectraActionButton.UseVisualStyleBackColor = true;
@@ -207,9 +214,10 @@
             // 
             this.ScriptingSettingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.ScriptingSettingsButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ScriptingSettingsButton.Location = new System.Drawing.Point(520, 219);
+            this.ScriptingSettingsButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ScriptingSettingsButton.Location = new System.Drawing.Point(520, 210);
             this.ScriptingSettingsButton.Name = "ScriptingSettingsButton";
-            this.ScriptingSettingsButton.Size = new System.Drawing.Size(99, 35);
+            this.ScriptingSettingsButton.Size = new System.Drawing.Size(99, 44);
             this.ScriptingSettingsButton.TabIndex = 9;
             this.ScriptingSettingsButton.Text = "Scripting Settings";
             this.ScriptingSettingsButton.UseVisualStyleBackColor = true;
@@ -218,9 +226,10 @@
             // ViewModelButton
             // 
             this.ViewModelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ViewModelButton.Location = new System.Drawing.Point(122, 219);
+            this.ViewModelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ViewModelButton.Location = new System.Drawing.Point(122, 210);
             this.ViewModelButton.Name = "ViewModelButton";
-            this.ViewModelButton.Size = new System.Drawing.Size(94, 35);
+            this.ViewModelButton.Size = new System.Drawing.Size(94, 44);
             this.ViewModelButton.TabIndex = 10;
             this.ViewModelButton.Text = "View Model";
             this.ViewModelButton.UseVisualStyleBackColor = true;
@@ -230,9 +239,10 @@
             // 
             this.AlgorithmSettingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.AlgorithmSettingsButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.AlgorithmSettingsButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.AlgorithmSettingsButton.Location = new System.Drawing.Point(520, 260);
             this.AlgorithmSettingsButton.Name = "AlgorithmSettingsButton";
-            this.AlgorithmSettingsButton.Size = new System.Drawing.Size(99, 34);
+            this.AlgorithmSettingsButton.Size = new System.Drawing.Size(99, 44);
             this.AlgorithmSettingsButton.TabIndex = 11;
             this.AlgorithmSettingsButton.Text = "Algorithm Settings";
             this.AlgorithmSettingsButton.UseVisualStyleBackColor = true;
@@ -241,13 +251,27 @@
             // ViewResultsButton
             // 
             this.ViewResultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.ViewResultsButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.ViewResultsButton.Location = new System.Drawing.Point(122, 259);
             this.ViewResultsButton.Name = "ViewResultsButton";
-            this.ViewResultsButton.Size = new System.Drawing.Size(94, 35);
+            this.ViewResultsButton.Size = new System.Drawing.Size(94, 45);
             this.ViewResultsButton.TabIndex = 12;
             this.ViewResultsButton.Text = "View Results";
             this.ViewResultsButton.UseVisualStyleBackColor = true;
             this.ViewResultsButton.Click += new System.EventHandler(this.ViewResultsButton_Click);
+            // 
+            // ReclassifyResultsButton
+            // 
+            this.ReclassifyResultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.ReclassifyResultsButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ReclassifyResultsButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ReclassifyResultsButton.Location = new System.Drawing.Point(21, 310);
+            this.ReclassifyResultsButton.Name = "ReclassifyResultsButton";
+            this.ReclassifyResultsButton.Size = new System.Drawing.Size(95, 44);
+            this.ReclassifyResultsButton.TabIndex = 13;
+            this.ReclassifyResultsButton.Text = "Reclassify Results";
+            this.ReclassifyResultsButton.UseVisualStyleBackColor = true;
+            this.ReclassifyResultsButton.Click += new System.EventHandler(this.ReclassifyResultsButton_Click);
             // 
             // TandemGlycopeptideAnalysis
             // 
@@ -255,6 +279,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(631, 469);
+            this.Controls.Add(this.ReclassifyResultsButton);
             this.Controls.Add(this.ViewResultsButton);
             this.Controls.Add(this.AlgorithmSettingsButton);
             this.Controls.Add(this.ViewModelButton);
@@ -292,6 +317,7 @@
         private System.Windows.Forms.Button ViewResultsButton;
         private System.Windows.Forms.Label ProteinProspectorMSDigestXMLLabel;
         private System.Windows.Forms.Button AddProteinProspectorMSDigestXmlFileButton;
+        private System.Windows.Forms.Button ReclassifyResultsButton;
     }
 }
 

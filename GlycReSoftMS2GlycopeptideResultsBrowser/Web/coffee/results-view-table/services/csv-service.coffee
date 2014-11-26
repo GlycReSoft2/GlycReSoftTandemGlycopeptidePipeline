@@ -1,10 +1,7 @@
 # csv-service.coffee
 # Depends upon d3 to provide the Csv parsing features
-
-GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($window) ->
-
-
-    @serializedFields = [
+class CsvService
+    @serializedFields:  [
                         "Oxonium_ions",
                         "Stub_ions",
                         "bare_b_ions",
@@ -44,7 +41,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
                         'percent_y_ion_with_HexNAc_coverage'
                     ]
 
-    @defaultValues = {
+    @defaultValues:  {
         "hexNAcCoverageMap": (pred) -> [0 for i in [0...pred.peptideLens]]
         "peptideCoverageMap": (pred) -> [0 for i in [0...pred.peptideLens]]
         "meanHexNAcCoverage": (pred) -> 0.0
@@ -56,20 +53,20 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
     }
 
 
-    @parse = (stringData) ->
+    @parse:  (stringData) ->
         rowData = d3.csv.parse(stringData)
         instantiatedData = @deserializeAfterParse(rowData)
         @defaultValues(instantiatedData)
         return instantiatedData
 
-    @format = (rowData) ->
+    @format:  (rowData) ->
         serializedData = @serializeBeforeFormat(rowData)
         stringData = d3.csv.format(serializedData)
         return stringData
 
     # Translating from CSV leaves many fields as strings or JSON trees that need to be parsed into
     # JS Numbers and Objects
-    @deserializeAfterParse = (predictions) ->
+    @deserializeAfterParse:  (predictions) ->
         self = this
         _.forEach(predictions, (obj) ->
             _.forEach(self.serializedFields, (field) ->
@@ -81,7 +78,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
         )
         return predictions
 
-    @setDefaultValues = (predictions) ->
+    @setDefaultValues:  (predictions) ->
         for pred in predictions
             for key, defaultFn of @defaultValues
                 if not pred[key]?
@@ -89,7 +86,7 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
 
         return predictions
 
-    @serializeBeforeFormat = (predictions) ->
+    @serializeBeforeFormat:  (predictions) ->
         self = this
         predictions = _.cloneDeep(predictions)
         _.forEach(predictions, (obj) ->
@@ -103,7 +100,11 @@ GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", ["$window", ($win
         )
         return predictions
 
-    #console.log(@)
-    $window.csvService = this
-]
+try
+    GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", [() -> CsvService]
 
+if(module?)
+    if not module.exports?
+        module.exports = {}
+
+    module.exports = CsvService

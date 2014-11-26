@@ -63,6 +63,15 @@
     <Compile Include="ScriptManager.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="python\glycresoft_ms2_classification\classify_matches.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\entry_point.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\error_code_interface.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="python\glycresoft_ms2_classification\match_ions.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -70,6 +79,18 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="python\glycresoft_ms2_classification\score_results.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\statistics\classifier_definitions.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\statistics\data_processing.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\statistics\sequence_handling.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\statistics\__init__.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="python\glycresoft_ms2_classification\structure\composition.py">
@@ -99,35 +120,36 @@
     <Content Include="python\glycresoft_ms2_classification\theoretical_glycopeptide.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="python\glycresoft_ms2_classification\utils\memoize.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\utils\__init__.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="python\glycresoft_ms2_classification\__init__.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="python\glycresoft_ms2_classification\__main__.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="python\glycresoft_ms2_classification\protein_prospector\__init__.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="python\glycresoft_ms2_classification\protein_prospector\xml_parser.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Content Include="python\glycresoft_ms2_classification\R\rf_classify.R">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Compile Include="_Extensions.cs" />
     <None Include="packages.config" />
-    <Content Include="python\glycresoft_ms2_classification\R\prepare_model.R">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="python\glycresoft_ms2_classification\R\describe_model.R">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="python\glycresoft_ms2_classification\R\install_dependencies.R">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="python\glycresoft_ms2_classification\R\label_and_disambiguate.R">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="python\glycresoft_ms2_classification\structure\data\ProteinProspectorModifications-for_gly2.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="python\glycresoft_ms2_classification\exit_code_map.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="python\glycresoft_ms2_classification\model_methods.json" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

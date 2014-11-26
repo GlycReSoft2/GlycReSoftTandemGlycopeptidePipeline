@@ -62,6 +62,7 @@
             // 
             // CancelMenuButton
             // 
+            this.CancelMenuButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.CancelMenuButton.Location = new System.Drawing.Point(181, 195);
             this.CancelMenuButton.Name = "CancelMenuButton";
             this.CancelMenuButton.Size = new System.Drawing.Size(75, 23);
@@ -72,6 +73,7 @@
             // 
             // OkayButton
             // 
+            this.OkayButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.OkayButton.Location = new System.Drawing.Point(100, 195);
             this.OkayButton.Name = "OkayButton";
             this.OkayButton.Size = new System.Drawing.Size(75, 23);

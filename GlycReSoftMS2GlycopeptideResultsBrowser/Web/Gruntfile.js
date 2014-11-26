@@ -139,7 +139,6 @@ module.exports = function(grunt){
               ],
               tasks: ["embedTemplates"]
             }
-
         },
     })
     grunt.registerMultiTask("embedTemplates", "Wraps Angular Templates in <script> tags and embeds them in an HTML document,\

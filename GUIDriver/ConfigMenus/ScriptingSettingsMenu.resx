@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="label3.Text" xml:space="preserve">
-    <value>Please place the paths to the installed Python interpreter
-and Rscript interpreter you wish to use with this program
-in the associated text boxes. If you have already added
-these programs to your system path, you may leave the
-text boxes blank.</value>
+    <value>Please place the paths to the installed Python 
+interpreter you wish to use with this program 
+in the associated text boxes. If you have already
+added these programs to your system path,
+you may leave the text boxes blank.</value>
   </data>
 </root>

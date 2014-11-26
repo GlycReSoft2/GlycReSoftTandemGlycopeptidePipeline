@@ -73,7 +73,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
 
         public String ResultsFilePath { get; set; }
 
-        public AnalysisPipeline Pipeline = null;               
+        public AnalysisPipeline Pipeline = null;
 
         public event PropertyChangedEventHandler PropertyChanged;
         #endregion        
@@ -106,13 +106,13 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
 
                 this.Pipeline = new AnalysisPipeline(MS1MatchFilePath, 
                     GlycosylationSiteFilePath, MS2DeconvolutionFilePath, 
-                    goldStandardPath: ModelFilePath, outputFilePath: null,
+                    modelFilePath: ModelFilePath, outputFilePath: null,
                     constantModifications: proteinProspectorReport.ConstantModifications,
                     variableModifications: proteinProspectorReport.VariableModifications,
                     ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
                     ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
                     pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
-                    rscriptPath: ConfigurationManager.Scripting.RscriptInterpreterPath);
+                    rscriptPath: null);
 
                 ResultsRepresentation results = Pipeline.RunClassification();
                 File.Delete(results.SourceFile);
@@ -139,18 +139,38 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
 
             this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
                 GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
-                goldStandardPath: ModelFilePath, outputFilePath: null,
+                modelFilePath: ModelFilePath, outputFilePath: null,
                 constantModifications: proteinProspectorReport.ConstantModifications,
                 variableModifications: proteinProspectorReport.VariableModifications,
                 ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
                 ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
                 pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
-                rscriptPath: ConfigurationManager.Scripting.RscriptInterpreterPath);
+                rscriptPath: null);
 
             ResultsRepresentation modelRepresentation = Pipeline.RunModelBuilder();
             File.Delete(modelRepresentation.SourceFile);
             return modelRepresentation;
         }
+
+        public ResultsRepresentation ReclassifyWithModel(String reclassificationTargetFilePath)
+        {
+            this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
+                GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
+                modelFilePath: ModelFilePath, outputFilePath: null,
+                constantModifications: null,
+                variableModifications: null,
+                ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
+                ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
+                pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
+                rscriptPath: null);
+
+            ResultsRepresentation modelRepresentation = this.Pipeline.RunReclassification(reclassificationTargetFilePath, ModelFilePath);
+            File.Delete(modelRepresentation.SourceFile);
+            return modelRepresentation;
+            
+        }
+
+
 
         [Serializable]
         public class PipelineInitializationException : Exception

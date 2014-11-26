@@ -281,60 +281,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 summary: "<div class='frequency-plot-container'></div>"
                 items: []
                 postLoadFn: () ->
-                    $('.frequency-plot-container').highcharts({
-                        series: [
-                            {
-                                name: "b Ions"
-                                data: glycoform._obj.bIonCoverageMap
-                                stack: "peptide"
-                            },
-                            {
-                                name: "y Ions"
-                                data: glycoform._obj.yIonCoverageMap
-                                stack: "peptide"
-                            },
-                            {
-                                name: "b Ions with HexNAc"
-                                data: glycoform._obj.bIonCoverageWithHexNAcMap
-                                stack: "hexNAc"
-                            },
-                            {
-                                name: "y Ions with HexNAc"
-                                data: glycoform._obj.yIonCoverageWithHexNAcMap
-                                stack: "hexNAc"
-                            }
-                        ],
-                        chart: {
-                            type: 'column'
-                        },
-                        plotOptions: {
-                            column:{
-                                stacking: "normal"
-                                shadow:false,
-                                borderWidth:.5,
-                                pointPadding:0,
-                                groupPadding:0,
-                            },
-                        }
-                        title: {
-                            text: 'Peptide Backbone Coverage'
-                        },
-                        yAxis: {
-                            allowDecimals: false,
-                            title: {
-                                text: 'X Coverage'
-                            }
-                        }
-                        xAxis: {
-                            type: 'category',
-                        },
-                        tooltip: {
-                            pointFormat: '<b>{point.y} Times Coverage</b> Frequency'
-                        },
-                        legend: {
-                           enabled: true
-                        }
-                    })
+                    $(".modal-dialog").css {width: "85%", height: "95%"}
+                    new PlotUtils.BackboneStackChart(glycoform._obj, ".frequency-plot-container").render()
             }
 
         parseGlycopeptideIdentifierToModificationsArray = (glycoform, startSite) ->
@@ -493,6 +441,8 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                             scope: scope
                             controller: ModalInstanceCtrl
                             size: 'lg'
+                            windowClass: if feature.modalOptions.windowClass? then feature.modalOptions.windowClass \
+                            else "peptide-view-modal"
                             resolve: {
                                 title: ()->
                                     return feature.modalOptions.title

@@ -66,6 +66,7 @@
     </Compile>
     <Compile Include="ConfigMenus\ScriptingSettings.cs" />
     <Compile Include="Data\BuiltInModels.cs" />
+    <Compile Include="FilePathTrimmingBinding.cs" />
     <Compile Include="GridViews\ClassifierResultsView.cs">
       <SubType>Form</SubType>
     </Compile>
