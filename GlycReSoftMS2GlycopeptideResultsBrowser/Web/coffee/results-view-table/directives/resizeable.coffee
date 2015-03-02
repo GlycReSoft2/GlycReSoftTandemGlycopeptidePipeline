@@ -4,10 +4,8 @@
 resizeable = GlycReSoftMSMSGlycopeptideResultsViewApp.directive 'resizable', ($window) ->
     {
         restrict: "A"
-        scope: {
-            percent: "=windowPercent"
-        }
-        link:(scope, element) ->
+        link:(scope, element, attr) ->
+                console.log "Resizeable", arguments
                 windowPercent = scope.percent
                 scope.initializeWindowSize = ->
                   scope.windowHeight = $window.innerHeight * windowPercent

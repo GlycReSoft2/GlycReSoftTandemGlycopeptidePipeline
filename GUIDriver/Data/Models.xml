@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Models>
-  <Model Name="USSR Influenza" Path="USSRInfluenzaModel.csv" Notes=""></Model>
-  <Model Name="Mixed Strains of Influenza" Path="MixedInfluenzaModel.csv" Notes=""></Model>
+  <Model Name="USSR Influenza" Path="USSRInfluenzaModel.json" Notes=""></Model>
+  <Model Name="AGP" Path="AGPMixtureModel.json" Notes="20140912_06_isos-model"></Model>
 </Models>

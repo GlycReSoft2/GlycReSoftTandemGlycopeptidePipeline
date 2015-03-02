@@ -75,11 +75,15 @@ module.exports = function(grunt){
 
                       'js/vendor/angular-ui.min.js',
                       'js/vendor/angular-ui-ieshiv.min.js',
-                      'js/vendor/ng-grid-2.0.12.min.js',
+                      'js/vendor/ng-grid-2.0.14.debug.js',
+                      'js/vendor/ng-grid-flexible-height.js',
+                      'js/vendor/ng-grid-layout.js',
+
                       'js/vendor/ui-bootstrap-0.11.0.min.js',
                       'js/vendor/ui-bootstrap-tpls-0.11.0.min.js',
                       'js/vendor/angular-sanitize.min.js',
 
+                      'js/vendor/eval/*.js'
                       ],
               dest: "js/vendor/vendor.concat.js",
             },
@@ -97,11 +101,12 @@ module.exports = function(grunt){
                       //View Directives
                       'js/results-view-table/directives/protein-sequence-view.js',
                       'js/results-view-table/directives/ambiguity-plot.js',
+                      'js/results-view-table/directives/metadata-display.js',
 
                       //Component Directives
                       'js/results-view-table/directives/fragment-ion.js',
                       'js/results-view-table/directives/resizeable.js',
-                      'js/results-view-table/directives/save-csv.js',
+                      'js/results-view-table/directives/save-results.js',
                       'js/results-view-table/directives/html-popover.js',
                       'js/results-view-table/directives/help-menu.js',
 
@@ -140,6 +145,11 @@ module.exports = function(grunt){
               tasks: ["embedTemplates"]
             }
         },
+        serve: {
+        options: {
+            port: 9090
+        }
+    }
     })
     grunt.registerMultiTask("embedTemplates", "Wraps Angular Templates in <script> tags and embeds them in an HTML document,\
       using the template's path as its id field", function(args){
@@ -152,6 +162,6 @@ module.exports = function(grunt){
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-ng-annotate');
-
-    grunt.registerTask('default', ['coffee', "less", "concat", "embedTemplates", "watch"]);
+    grunt.loadNpmTasks('grunt-serve');
+    grunt.registerTask('default', ['coffee', "less", "concat", "embedTemplates", "watch", "serve"]);
 }

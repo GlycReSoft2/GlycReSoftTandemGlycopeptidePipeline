@@ -140,10 +140,8 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.GridViews
                 {
                     Console.WriteLine("Saving Model");                    
                     var saveFileStreamWriter = new StreamWriter((FileStream)saveModelFileDialog.OpenFile());
-                    if (saveModelFileDialog.FilterIndex == 1) Model.WriteToCsv(saveFileStreamWriter);
-                    else if (saveModelFileDialog.FilterIndex == 2) Model.WriteToJson(saveFileStreamWriter);
-                    //Default
-                    else Model.WriteToCsv(saveFileStreamWriter);
+                    Model.WriteToJson(saveFileStreamWriter);
+                   
                 }
             }
             catch (IOException ex)

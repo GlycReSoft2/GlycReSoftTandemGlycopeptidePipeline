@@ -73,7 +73,7 @@
  *    It must have the following members:
  *       <ul>
  *          <li>segment | <span class="dataType">{string}</span>
- *          	<p>Segment, accession or identification.<p>
+ *              <p>Segment, accession or identification.<p>
  *          </li>
  *          <li>configuration | <span class="dataType">{object}</span>
  *              <p>
@@ -120,7 +120,7 @@
  *                 verticalGridLineLengthCentered: &lt;int&gt; //vertical grid lines&#39; length for the centered style
  *                 verticalGridLineLengthNonOverlapping: &lt;int&gt; //vertical grid lines&#39; length for the nonOverlapping style
  *                 verticalGridLineLengthRows: &lt;int&gt; //vertical grid lines&#39; length for the rows style
- *          	</pre>
+ *              </pre>
  *          </li>
  *          <li>featuresArray | <span class="dataType">{Array}</span>
  *              <p>Each element corresponds to an annotation, it includes elements representing the annotation itself as well as elements representing
@@ -158,7 +158,7 @@
  *             </pre>
  *          </li>
  *          <li>legend | <span class="dataType">{object}</span>
- *          	<p>Information to be displayed in the keyElements such as XXXNonOverlapping, XXXCentered, and XXXRows are necessary only it you want to enable changing
+ *              <p>Information to be displayed in the keyElements such as XXXNonOverlapping, XXXCentered, and XXXRows are necessary only it you want to enable changing
  *                 styles without retrieving the data from the server again.
  *              </p>
  *              <pre class="brush: js" title="Legend object">
@@ -397,13 +397,13 @@ Biojs.FeatureViewer = Biojs.extend(
          * //feature, instead set to ture the options selectFeatureOnMouseClick.
          * myPainter.onFeatureClick(
          *    function( obj ) {
-	         *    var tooltip = obj.featureLabel +
-	         *          " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
-	         *          "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
-	         *          "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
-	         *       alert("Clicked: " + tooltip );
-	         *       Biojs.console.log(obj.shape); //rapha�l object
-	         *    }
+             *    var tooltip = obj.featureLabel +
+             *          " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
+             *          "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
+             *          "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
+             *       alert("Clicked: " + tooltip );
+             *       Biojs.console.log(obj.shape); //rapha�l object
+             *    }
          * );
          *
          * */
@@ -421,13 +421,13 @@ Biojs.FeatureViewer = Biojs.extend(
          *
          * myPainter.onFeatureOn(
          *    function( obj ) {
-	         *    var tooltip = obj.featureLabel +
-	         *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
-	         *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
-	         *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
-	         *       alert("On feature: " + tooltip );
-	         *       Biojs.console.log(obj.shape); //rapha�l object
-	         *    }
+             *    var tooltip = obj.featureLabel +
+             *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
+             *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
+             *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
+             *       alert("On feature: " + tooltip );
+             *       Biojs.console.log(obj.shape); //rapha�l object
+             *    }
          * );
          *
          * */
@@ -443,13 +443,13 @@ Biojs.FeatureViewer = Biojs.extend(
          *
          * myPainter.onFeatureOff(
          *    function( obj ) {
-	         *    var tooltip = obj.featureLabel +
-	         *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
-	         *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
-	         *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
-	         *       alert("Off feature: " + tooltip );
-	         *       Biojs.console.log(obj.shape); //rapha�l object
-	         *    }
+             *    var tooltip = obj.featureLabel +
+             *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
+             *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
+             *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
+             *       alert("Off feature: " + tooltip );
+             *       Biojs.console.log(obj.shape); //rapha�l object
+             *    }
          * );
          *
          * */
@@ -465,13 +465,13 @@ Biojs.FeatureViewer = Biojs.extend(
          * //Will only be raised if selectFeatureOnMouseClick is true
          * myPainter.onFeatureSelected(
          *    function( obj ) {
-	         *    var tooltip = obj.featureLabel +
-	         *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
-	         *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
-	         *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
-	         *       alert("Selected feature: " + tooltip );
-	         *       Biojs.console.log(obj.shape); //rapha�l object
-	         *    }
+             *    var tooltip = obj.featureLabel +
+             *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
+             *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
+             *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
+             *       alert("Selected feature: " + tooltip );
+             *       Biojs.console.log(obj.shape); //rapha�l object
+             *    }
          * );
          *
          * */
@@ -487,13 +487,13 @@ Biojs.FeatureViewer = Biojs.extend(
          * //Will only be raised if selectFeatureOnMouseClick is true
          * myPainter.onFeatureUnselected(
          *    function( obj ) {
-	         *    var tooltip = obj.featureLabel +
-	         *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
-	         *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
-	         *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
-	         *       alert("Unselected feature: " + tooltip );
-	         *       Biojs.console.log(obj.shape); //rapha�l object
-	         *    }
+             *    var tooltip = obj.featureLabel +
+             *           " (" + obj.featureStart + ", " + obj.featureEnd + "; length " + (obj.featureEnd-obj.featureStart+1) + ")" +
+             *           "<br/>Type: " + obj.featureTypeLabel + " - " + obj.typeCode + " - " + obj.typeCategory +
+             *           "<br/>Evidence: " + obj.evidenceText + " - " + obj.evidenceCode;
+             *       alert("Unselected feature: " + tooltip );
+             *       Biojs.console.log(obj.shape); //rapha�l object
+             *    }
          * );
          *
          * */
@@ -1107,7 +1107,17 @@ Biojs.FeatureViewer = Biojs.extend(
             } else if (obj.type == "text") {
                 if (obj.featureId || !sequenceLineY) {
                     shape = this.raphael.text(obj.x, obj.y, obj.text);
-                    shape.attr({"stroke": obj.stroke, "fill-opacity": obj.fillOpacity, "stroke-width": 2});
+                    var strokeWidth = obj.strokeWidth === undefined ? 2 : obj.strokeWidth;
+                    var rotation = obj.deg === undefined ? 0 : obj.deg;
+                    var fontSize = obj.fontSize === undefined ? 12 : obj.fontSize
+                    var letterSpacing = obj.letterSpacing === undefined ? 1 : obj.letterSpacing
+                    shape.attr({"stroke": obj.stroke, "fill-opacity": obj.fillOpacity,
+                                "stroke-width": strokeWidth, "font-size": fontSize,
+                                "letter-spacing": letterSpacing
+                                });
+                    if(obj.transform !== undefined){
+                        shape.transform(obj.transform)
+                    }
                 } else {
                     var text = this.raphael.text(obj.x, obj.y, obj.text);
                     text.attr({"fill": obj.fill});

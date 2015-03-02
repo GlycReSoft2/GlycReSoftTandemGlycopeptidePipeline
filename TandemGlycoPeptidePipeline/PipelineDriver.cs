@@ -26,9 +26,12 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public double MS1MatchingTolerance;
         public double MS2MatchingTolerance;
 
-        public String[] ConstantModifications;
-        public String[] VariableModifications;
+        public String ProteinProspectorXMLFilePath;
         public String Method;
+
+        public int NumProcesses { get; set; }
+        public int NumDecoys { get; set; }
+        public bool OnlyRandomDecoys { get; set; }
 
         public String ResultFilePath;
         public ResultsRepresentation ResultsTable;        
@@ -53,10 +56,10 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public AnalysisPipeline(String MS1MatchFilePath, String glycosylationSiteFilePath,
             String MS2DeconFilePath, String modelFilePath = null,
             String outputFilePath = null, double ms1MatchingTolerance = 1e-5,
-            double ms2MatchingTolerance = 2e-5, String[] constantModifications = null,
-            String[] variableModifications = null, String method = "full_random_forest",
+            double ms2MatchingTolerance = 2e-5, String proteinProspectorXMLFilePath = null, String method = "full_random_forest",
             String pythonInterpreterPath = null, String rscriptPath = null, 
-            String scriptsRoot = null)
+            String scriptsRoot = null, int numProcesses = 2, bool onlyRandomDecoys = false, 
+            int numDecoys = 20)
         {
             this.MS1MatchFilePath = MS1MatchFilePath;
             this.GlycosylationSiteFilePath = glycosylationSiteFilePath;
@@ -70,20 +73,15 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             this.MS1MatchingTolerance = ms1MatchingTolerance;
             this.MS2MatchingTolerance = ms2MatchingTolerance;
             this.Method = method;
-            this.ConstantModifications = constantModifications;
-            this.VariableModifications = variableModifications;
+            this.ProteinProspectorXMLFilePath = proteinProspectorXMLFilePath;
+
+            this.NumDecoys = numDecoys;
+            this.NumProcesses = numProcesses;
+            this.OnlyRandomDecoys = onlyRandomDecoys;
 
             //Make sure that all needed resources can be found
             this.Scripter = new ScriptManager(pythonInterpreterPath, rscriptPath, scriptsRoot);
             Scripter.VerifyFileSystemTargets();
-        }
-
-        /// <summary>
-        /// Install R libraries used by the pipeline. 
-        /// </summary>
-        public void InstallRLibraryDependencies()
-        {
-            Scripter.InstallRDependencies();
         }
 
         /// <summary>
@@ -98,10 +96,10 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
                 modelDataFilePath:this.ModelFilePath,
                 ms1MatchingTolerance:this.MS1MatchingTolerance, 
                 ms2MatchingTolerance:this.MS2MatchingTolerance,
-                constantModifications:this.ConstantModifications,
-                variableModifications:this.VariableModifications,
+                proteinProspectorXMLFilePath:this.ProteinProspectorXMLFilePath,
                 method:Method,
-                outputFilePath:this.ResultFilePath);
+                outputFilePath:this.ResultFilePath,
+                numProcesses: NumProcesses);
 
             this.ResultFilePath = outfile;
 
@@ -117,8 +115,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
                 this.MS2DeconFilePath,
                 ms1MatchingTolerance:this.MS1MatchingTolerance, 
                 ms2MatchingTolerance:this.MS2MatchingTolerance,
-                constantModifications: this.ConstantModifications,
-                variableModifications: this.VariableModifications,
+                proteinProspectorXMLFilePath: this.ProteinProspectorXMLFilePath,
                 method:Method);
 
             ResultsRepresentation model = new ResultsRepresentation(outfile);

@@ -11,10 +11,12 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
     {
 
         public static bool Verbose = false;
+        public static bool NoWindow = true;
+        public static bool DebugOnly = false;
 
         public String Out = "";
         public String Err = "";
-        ProcessStartInfo Info;
+        protected ProcessStartInfo Info;
         protected Process Proc = null;      
 
         public int ExitCode { get {
@@ -35,12 +37,10 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             Info.Arguments = args;
 
             Info.UseShellExecute = false;
-            Info.CreateNoWindow = true;
+            Info.CreateNoWindow = NoWindow;
             
             Info.RedirectStandardOutput = true;
             Info.RedirectStandardError = true;
-
-            InitProc();
         }
 
         public String CmdStr { get { return Info.FileName + " " + Info.Arguments; } }
@@ -75,11 +75,16 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
 
         public void Start()
         {
+            
             try
-            {
+            {                
                 if (Proc == null)
                 {
                     InitProc();
+                }
+                if (DebugOnly)
+                {
+                    throw new Exception("Short-Circuit");
                 }
                 Proc.Start();
                 Proc.BeginOutputReadLine();
@@ -122,5 +127,43 @@ Standard Error Stream Dump = {Err}
 
         }
 
+    }
+
+    public class PythonProcessManager : ProcessManager
+    {
+        public String PythonPath;
+
+        public PythonProcessManager(String fileName, String args = "", String pythonPathUpdate = null)
+            : base(fileName, args)
+        {
+            PythonPath = this.Info.EnvironmentVariables["PYTHONPATH"];
+            if(pythonPathUpdate != null){
+                PythonPath = String.Format("{0};{1}", pythonPathUpdate, PythonPath);
+                this.Info.EnvironmentVariables["PYTHONPATH"] = PythonPath;
+            }
+        }
+
+        public new String GenerateDumpMessage()
+        {
+            String msgTemplate =
+@"{CmdStr}
+---------------------
+Exit Code: {ExitCode}
+---------------------
+PythonPath: {PythonPath}
+---------------------
+Standard Output Stream Dump = {Out}
+---------------------
+Standard Error Stream Dump = {Err}
+---------------------
+";
+            //String msg = this.CmdStr + Environment.NewLine + "-----------" + 
+            //        Environment.NewLine + this.ExitCode.ToString() + 
+            //        Environment.NewLine + this.Out + Environment.NewLine + 
+            //        "-----------" + Environment.NewLine + this.Err;
+
+            return msgTemplate.FormatWith(this);
+
+        }
     }
 }

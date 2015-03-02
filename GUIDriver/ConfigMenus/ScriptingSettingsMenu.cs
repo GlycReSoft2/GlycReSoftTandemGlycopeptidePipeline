@@ -20,6 +20,7 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
             InitializeComponent();
             Console.WriteLine(ConfigurationManager.Scripting);
             this.PythonExecutablePathTextBox.Text = ConfigurationManager.Scripting.PythonInterpreterPath;
+            UpdateDependencyIndicator(ConfigurationManager.Scripting.DependenciesFound);
         }
 
         private void CancelButton_Click(object sender, EventArgs e)
@@ -50,13 +51,43 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
                 Console.WriteLine("Ping");
                 scriptingManager.InstallPythonDependencies();
                 Console.WriteLine("Pong");
-                ConfigurationManager.Scripting.PythonDependenciesInstalled = true;
+                ConfigurationManager.Scripting.DependenciesFound = DependencyInstalledState.Yes;
                 ConfigurationManager.WriteScriptingSettingsToFile(Application.StartupPath, ConfigurationManager.Scripting);
-                MessageBox.Show(ConfigurationManager.Scripting.ToString());
             }
             catch (Exception ex)
             {
+                ConfigurationManager.Scripting.DependenciesFound = DependencyInstalledState.No;
                 MessageBox.Show(ex.Message);
+            }
+            UpdateDependencyIndicator(ConfigurationManager.Scripting.DependenciesFound);
+        }
+
+        private void UpdateDependencyIndicator(DependencyInstalledState isInstalled)
+        {
+            switch (isInstalled)
+            {
+                case (DependencyInstalledState.Yes):
+                    {
+                        DependencyCheckIndicator.Text = DependencyInstalledState.Yes.ToString();
+                        DependencyCheckIndicator.BackColor = Color.Green;
+                        break;
+                    }
+                case DependencyInstalledState.No:
+                    {
+                        DependencyCheckIndicator.Text = DependencyInstalledState.No.ToString();
+                        DependencyCheckIndicator.BackColor = Color.Red;
+                        break;
+                    }
+                case DependencyInstalledState.Unknown:
+                    {
+                        DependencyCheckIndicator.Text = DependencyInstalledState.Unknown.ToString();
+                        DependencyCheckIndicator.BackColor = Color.Yellow;
+                        break;
+                    }
+                default:
+                    {
+                        throw new Exception("Could not interpret dependency installed enum");
+                    }
             }
         }
     }

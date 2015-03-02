@@ -56,7 +56,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
             featureLabel: ""
             featureStart: null # number
             featureEnd: null # number
-            strokeWidth: 1 # number
+            strokeWidth: 0.6 # number
             r: 10 # number
 
             featureTypeLabel: "" # string related to featureLabel and typeLabel
@@ -98,14 +98,15 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
               },
               typeLabel: "",
               y: 229,
-              strokeWidth: 1,
+              strokeWidth: 0.6,
               x: 15
             }
         }
 
+        collapseGlycanShape = "circle"
         shapeMap = {
             Peptide: "rect"
-            HexNAc: "circle"
+            HexNAc: "text"
             PTM: "triangle"
         }
 
@@ -172,7 +173,6 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
             for modId, mod of foldedMods
                 ordMods = (orderBy(mod, ((obj) -> obj._obj.MS2_Score), true))
                 bestMod = ordMods[0]
-
                 colocatingFeatures = fragmentsSurroundingPosition(bestMod.featureStart, features)
                 [frequencyOfModification, containingFragments] = fragmentsContainingModification(bestMod, colocatingFeatures)
 
@@ -187,9 +187,12 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 if typeCategoryMap[bestMod.featureTypeLabel] is "Glycan"
                     makeGlycanCompositionContent(bestMod, containingFragments)
 
-
-
-
+                # If glyan is not unique, collapse it into a circle
+                if /HexNAc/.test modId
+                    glycanTypeCount = (Object.keys _.groupBy(mod, (o) -> o._obj.Glycan)).length
+                    if glycanTypeCount > 1
+                        bestMod.type = "circle"
+                        bestMod.r /= 2
 
                 topMods.push(bestMod)
             return topMods
@@ -291,23 +294,23 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
             index = 0
             fragments = glycopeptide.split(regex)
             modifications = []
+            glycanComposition = null
+            glycans = []
             for frag in fragments
                 if frag.charAt(0) is "["
-                    # Ignore the Glycan Identifier Chunk
+                    glycanComposition = frag
                 else if frag.charAt(0) is "("
                     # This is a modification site
                     label = frag.replace(/\(|\)/g, "")
                     feature = _.cloneDeep(featureTemplate)
                     feature.type = if label of shapeMap then shapeMap[label] else shapeMap.PTM
 
-                    if feature.type is "circle"
-                        feature.r /= 2
-
                     #if label not of colorMap
                     #    colorMap[label] = nextColor()
                     #    console.log(label, colorMap[label])
                     #feature.fill = colorMap[label]
                     feature.fill = colorService.getColor(label)
+                    feature.stroke = colorService.getColor(label)
 
                     feature.featureStart = index + startSite
                     feature.featureEnd = index + startSite
@@ -316,6 +319,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                     feature.typeCategory  = ""
                     feature.evidenceText = glycoform.MS2_Score
 
+                    feature.text = label
                     feature.featureLabel = label
                     feature.featureTypeLabel = label
                     feature.featureId = label + "-" + (index + startSite) # Parens prevent string addition
@@ -327,12 +331,29 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                         heightLayerMap[label] = _layerCounter
 
                     feature.cy = 140 - ((feature.r) + heightLayerMap[label])
-
+                    if feature.type == "text"
+                        feature.y = 140 - ((feature.r) + heightLayerMap[label])
+                        feature.fontSize = 12
+                        feature.letterSpacing = 2
+                        feature.strokeWidth = 1
                     feature._obj = glycoform
+                    if label != "HexNAc"
+                        modifications.push feature
 
-                    modifications.push feature
+                    # Handle glycans separately
+                    else
+                        glycans.push feature
                 else
                     index += frag.length
+
+            # Customize glycan layout
+            withinLayerAdjust = -10
+            for feature in glycans
+                feature.text = glycanComposition
+                feature.y += withinLayerAdjust + 10
+                withinLayerAdjust += 10
+                feature.cx += 50
+                modifications.push feature
 
 
             return modifications
@@ -389,7 +410,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
 
                     # Wait until after the modifications have been processed and registered in colorService
                     feature.featureLabel = highlightModifications(glycoform.Glycopeptide_identifier, false)
-                    feature.additionalTooltipContent = "<br/>Scan ID: #{glycoform.scan_id}<br/>Mass: #{glycoform.Obs_Mass}"
+                    feature.additionalTooltipContent = "<br/>Scan ID: #{glycoform.scan_id}<br/>Mass: #{glycoform.Obs_Mass}<br/>Feature ID: #{glycoform.id}"
                     coverageModalHistogram(feature)
                     featuresArray.push feature
 
@@ -471,7 +492,14 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 if feature.modifications?
                     for mod in feature.modifications
                         modId = "uniprotFeaturePainter_" + mod
-                        scope.featureViewerInstance.raphael.getById(modId).transform("s2").attr("fill-opacity", 1)
+                        modShape = scope.featureViewerInstance.raphael.getById(modId)
+                        if modShape.type != "text"
+                            modShape.scale(2)
+                        else
+                            modShape.attr("font-size", modShape.attr("font-size") * 2)
+                        modShape.attr("fill-opacity", 1)
+
+
                 if feature._obj.scan_id?
                     ambiguousMatches = scope.scanMap[feature._obj.scan_id]
                     for feat in ambiguousMatches
@@ -485,7 +513,15 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "proteinSeq
                 if feature.modifications?
                     for mod in feature.modifications
                         modId = "uniprotFeaturePainter_" + mod
-                        scope.featureViewerInstance.raphael.getById(modId).transform("s1").attr("fill-opacity", 0.5)
+                        #scope.featureViewerInstance.raphael.getById(modId).transform("s1").attr("fill-opacity", 0.5)
+                        modShape = scope.featureViewerInstance.raphael.getById(modId)
+
+                        if modShape.type != "text"
+                            modShape.scale(0.5)
+                        else
+                            modShape.attr("font-size", modShape.attr("font-size") * 0.5)
+                        modShape.attr("fill-opacity", 0.5)
+
                 if feature._obj.scan_id?
                     ambiguousMatches = scope.scanMap[feature._obj.scan_id]
                     for feat in ambiguousMatches

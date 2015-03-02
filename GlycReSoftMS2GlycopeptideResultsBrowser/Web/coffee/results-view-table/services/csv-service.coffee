@@ -68,12 +68,14 @@ class CsvService
     # JS Numbers and Objects
     @deserializeAfterParse:  (predictions) ->
         self = this
+        idCnt = 0
         _.forEach(predictions, (obj) ->
             _.forEach(self.serializedFields, (field) ->
                 obj[field] = angular.fromJson(obj[field]))
             obj.call = if obj.call == "Yes" then true else false
             obj.ambiguity = if obj.ambiguity == "True" then true else false
             obj.groupBy = 0
+            obj.id = idCnt++
             return obj
         )
         return predictions
@@ -101,7 +103,7 @@ class CsvService
         return predictions
 
 try
-    GlycReSoftMSMSGlycopeptideResultsViewApp.service "csvService", [() -> CsvService]
+    GlycReSoftMSMSGlycopeptideResultsViewApp.factory "csvService", [() -> CsvService]
 
 if(module?)
     if not module.exports?

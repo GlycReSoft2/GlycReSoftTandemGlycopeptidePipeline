@@ -17,8 +17,7 @@ do (()->
         return predictions
         );
 
-    applyFiltrex = (predictions, filtrexExpr) ->
-        filt = compileExpression(filtrexExpr)
+    applyFiltrex = (predictions, filt) ->
         filterResults = _.map(predictions, filt)
         passed = []
         for i in [0...predictions.length]
@@ -26,44 +25,37 @@ do (()->
                 passed.push(predictions[i])
         return passed
 
-    filterByFiltrex = ($scope, orderBy) ->
+    tryCompileFiltrex = ($scope) ->
+        $scope.filtrexError = false
         expr = $scope.params.filtrexExpr.toLowerCase()
         for column, key of $scope.headerSubstituitionDictionary
                 expr = expr.replace(new RegExp(column, "g"), key)
         try
-            console.log(expr)
-            filteredPredictions = applyFiltrex($scope._predictions, expr)
-            throw new Error "Incomplete Expression" if filteredPredictions.length is 0 and $scope._predictions.length is not 0
-            orderedResults = orderBy(filteredPredictions, ["MS1_Score", "Obs_Mass", "MS2_Score"])
-            groupedResults = if $scope.groupByKey? then setGroupBy($scope.groupByKey, orderedResults) else orderedResults
-            $scope.predictions = groupedResults
-            $scope.filtrexError = false
-            return groupedResults
+            fn = compileExpression(expr)
+
+            if $scope.predictions[0]? and isNaN(fn($scope.predictions[0]))
+                throw new Error("Filtrex #{expr} generates NaNs")
         catch ex
-            console.log "in catch"
-            console.log(ex, $scope.filtrexError)
-            $scope.filtrexError = true if expr.length > 0
-            if expr.length is 0
-                $scope.predictions = $scope._predictions
+            $scope.filtrexError = true
+            console.log ex
+        console.log $scope.filtrexError
+        return [$scope.filtrexError, fn]
+
+    filterByFiltrex = ($scope, orderBy) ->
+        [error, filterFn] = tryCompileFiltrex($scope)
+        if error
+            return
+        console.log "Working..."
+        filteredPredictions = applyFiltrex($scope._predictions, filterFn)
+        orderedResults = orderBy(filteredPredictions, ["MS1_Score", "Obs_Mass", "MS2_Score"])
+        groupedResults = if $scope.groupByKey? then setGroupBy($scope.groupByKey, orderedResults) else orderedResults
+        $scope.predictions = groupedResults
+        return groupedResults
 
 
     updateFiltrexDebounce = _.debounce ($scope, orderBy) ->
             $scope.$apply -> filterByFiltrex($scope, orderBy)
         10000
-
-    # This controller's main data may be injected by external sources at any time.
-    # Watch the injection site for changes and perform the most up-to-date filtering
-    # and processing on this data when it arrives
-    watchExternalDataChanges = ($scope, $window, orderBy) ->
-        $scope.$watch("_predictionsReceiver", (newVal, oldVald) ->
-            console.log(arguments)
-            $scope._predictions = orderBy(newVal, ["MS1_Score", "Obs_Mass", "-MS2_Score"])
-            filteredPredictions = filterByFiltrex($scope, orderBy)
-            filteredPredictions = $scope._predictions if not filteredPredictions?
-            groupedPredictions = $scope.setGroupBy($scope.params.currentGroupingRule.groupByKey, filteredPredictions)
-            $scope.predictions = groupedPredictions
-            return true
-        false)
 
     # Scrolls the ngGrid instance to a given row index
     focusRow = ($scope, targetRowIndex) ->
@@ -74,8 +66,8 @@ do (()->
     # Start-up logic for the Controller
     activateFn = ($scope, $window, $filter) ->
         orderBy = $filter("orderBy")
-        $scope.deregisterWatcher = watchExternalDataChanges($scope, $window, orderBy)
-        $scope.$watch("params.filtrexExpr", -> updateFiltrexDebounce($scope, orderBy))
+        $scope.headerSubstituitionDictionary = $scope.buildHeaderSubstituitionDictionary()
+        $scope.$watch("params.filtrexExpr", -> tryCompileFiltrex($scope, orderBy))
         $scope.$on("selectedPredictions", (evt, params) ->
             try
                 $scope.gridOptions.selectAll(false)
@@ -84,7 +76,6 @@ do (()->
                     $scope.gridOptions.selectRow(index, true)
             )
         $scope.$on("ambiguityPlot.requestPredictionsUpdate", (evt, params) -> $scope.sendRenderPlotEvt())
-        $scope.headerSubstituitionDictionary = $scope.buildHeaderSubstituitionDictionary()
         console.log("Activation Complete")
 
     helpText = {
@@ -125,19 +116,21 @@ do (()->
     }
 
     angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").controller(
-        "ClassifierResultsTableCtrl", [ "$scope", "$window", '$filter', 'csvService',
-        ($scope, $window, $filter, csvService) ->
+        "ClassifierResultsTableCtrl", [ "$scope", "$window", '$filter', 'csvService', '$timeout',
+        ($scope, $window, $filter, csvService, $timeout) ->
             orderBy = $filter("orderBy")
             $scope.helpText = helpText
             $scope.filterRules = filterRules
             $scope.groupingRules = groupingRules
 
+            $scope.backend = {}
+            $scope.metadata = {}
             $scope.predictions = []
             $scope._predictions = []
             $scope._predictionsReceiver = []
 
-            $scope.name = "GlycReSoft 2 Tandem MS Glycopeptide Analyzer"
             $scope.params = {}
+            $scope.params.name = "GlycReSoft 2 Tandem MS Glycopeptide Analyzer"
             $scope.headerSubstituitionDictionary = {}
 
 
@@ -148,7 +141,25 @@ do (()->
             $scope.deregisterWatcher = null
 
             $scope.ping = (args) -> console.log("ping", arguments, $scope)
-
+            $scope.update = (newVal) ->
+                console.log("Update", arguments)
+                $scope.backend = newVal
+                $scope.$apply(
+                    ->
+                    if !newVal.metadata?
+                        $scope.backend = new PredictionResults(newVal, {})
+                    else
+                        $scope.backend = new PredictionResults(newVal.predictions, newVal.metadata)
+                    predictions = $scope.backend._predictions
+                    $scope.metadata = $scope.backend.metadata
+                    $scope._predictions = orderBy(predictions, ["MS1_Score", "Obs_Mass", "-MS2_Score"])
+                    filteredPredictions = filterByFiltrex($scope, orderBy)
+                    filteredPredictions = $scope._predictions if not filteredPredictions?
+                    groupedPredictions = $scope.setGroupBy($scope.params.currentGroupingRule.groupByKey, filteredPredictions)
+                    $scope.predictions = groupedPredictions
+                    $scope.gridLayoutPlugin.updateGridLayout()
+                )
+                return true
             $scope.extendFiltrex = (expr) ->
                 if $scope.params.filtrexExpr.length > 0
                     $scope.params.filtrexExpr += " and " + expr
@@ -156,16 +167,7 @@ do (()->
                     $scope.params.filtrexExpr += expr
 
             $scope.filterByFiltrex = ->
-                dictionary = $scope.substituteHeaders()
-                expr = $scope.params.filtrexExpr.toLowerCase()
-                for column, key of dictionary
-                    expr = expr.replace(column, key)
-                results = applyFiltrex($scope._predictions, expr)
-                # Sort without negating MS2_Score because the data is pre-sorted and does not need to be
-                # reversed.
-                orderedResults = orderBy(results, ["MS1_Score", "Obs_Mass", "MS2_Score"])
-                groupedResults = setGroupBy($scope.groupByKey, orderedResults)
-                return groupedResults
+                filterByFiltrex($scope, orderBy)
 
             $scope.sendRenderPlotEvt = () ->
                 $scope.$broadcast("ambiguityPlot.renderPlot", {predictions: $scope.predictions})
@@ -173,9 +175,15 @@ do (()->
             $scope.setGroupBy = (grouping, predictions = null) ->
                 $scope.groupByKey = grouping
                 setGroupBy(grouping, predictions)
+            $scope.activateTable = ->
+                console.log "Activating table,", $scope
+                $scope.$apply($scope.scrollToSelection)
+                try
+                    $scope.gridLayoutPlugin.updateGridLayout()
 
             $scope.scrollToSelection = ->
                 if $scope.gridOptions.$gridScope? and $scope.gridOptions.$gridScope.selectedItems?
+                    console.log "Scroll to selection!"
                     selectedItems = $scope.gridOptions.$gridScope.selectedItems
                     topIndex = Infinity # The index at the top of the selection (nearest to 0)
                     for glycopeptide in selectedItems
@@ -183,7 +191,8 @@ do (()->
                         topIndex = index if index < topIndex
                     if topIndex is Infinity
                         return false
-                    focusRow($scope, topIndex)
+                    $timeout( (-> focusRow($scope, topIndex)), 50)
+                    console.log topIndex
                     return 0
 
             $scope.buildHeaderSubstituitionDictionary = ->
@@ -228,6 +237,7 @@ do (()->
                                     </div>
                                     <div ng-show="col.resizable" class="ngHeaderGrip" ng-click="col.gripClick($event)" ng-mousedown="col.gripOnMouseDown($event)"></div>'
 
+            $scope.gridLayoutPlugin = new ngGridLayoutPlugin();
             $scope.gridOptions = {
                 data: "predictions"
                 showColumnMenu: true
@@ -236,14 +246,14 @@ do (()->
                 enableHighlighting: true
                 enablePinning: true
                 rowHeight: 90
-
+                plugins: [ $scope.gridLayoutPlugin ]
                 columnDefs:[
                     {
                         field:'scan_id'
                         width:90
                         pinned:true
                         displayName: "Scan ID"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
@@ -251,7 +261,7 @@ do (()->
                         width:90
                         pinned: true
                         displayName:"MS2 Score"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|number:4}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
@@ -259,7 +269,7 @@ do (()->
                         width:90
                         pinned: true
                         displayName:"MS1 Score"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|number:4}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
@@ -267,22 +277,22 @@ do (()->
                         width:130
                         pinned: true
                         displayName:"Observed Mass"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:4}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|number:4}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'vol'
-                        width:100
+                        width:90
                         pinned: true
                         displayName:"Volume"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:3}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|number:3}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'ppm_error'
                         width:90
                         displayName:"PPM Error"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|scientificNotation|number:4}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|scientificNotation|number:4}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
@@ -297,28 +307,28 @@ do (()->
                         field:'meanCoverage'
                         width:180
                         displayName:"Mean Peptide Coverage"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:3}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|number:3}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'meanHexNAcCoverage'
                         width:180
                         displayName:"Mean PeptideHexNAc Coverage"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)|number:3}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)|number:3}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field:'percentUncovered'
                         width:165
                         displayName:"% Peptide Uncovered"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field) * 100|number:2}}</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field) * 100|number:2}}</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
                         field: "startAA"
                         width: 180
                         displayName: "Peptide Span"
-                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{row.getProperty(col.field)}}-{{row.entity.endAA}}&nbsp;({{row.entity.peptideLens}})</div></div>'
+                        cellTemplate: '<div><div class="ngCellText matched-ions-cell">{{::row.getProperty(col.field)}}-{{row.entity.endAA}}&nbsp;({{row.entity.peptideLens}})</div></div>'
                         headerCellTemplate: headerCellTemplateNoPin
                     }
                     {
@@ -330,7 +340,7 @@ do (()->
                         cellTemplate:
                                     '<div>
                                         <div class="ngCellText">
-                                            <div class="coverage-text">{{row.entity.numOxIons}} Ions Matched</div>
+                                            <div class="coverage-text">{{::row.entity.numOxIons}} Ions Matched</div>
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
@@ -345,7 +355,7 @@ do (()->
                         cellTemplate:
                                     '<div>
                                         <div class="ngCellText">
-                                            <div class="coverage-text">{{row.entity.numStubs}} Ions Matched</div>
+                                            <div class="coverage-text">{{::row.entity.numStubs}} Ions Matched</div>
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
@@ -360,7 +370,7 @@ do (()->
                         cellTemplate:
                                     '<div>
                                         <div class="ngCellText">
-                                            <div class="coverage-text">{{row.entity.percent_b_ion_coverage * 100|number:1}}% Coverage</div>
+                                            <div class="coverage-text">{{::row.entity.percent_b_ion_coverage * 100|number:1}}% Coverage</div>
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
@@ -375,7 +385,7 @@ do (()->
                         cellTemplate:
                                     '<div>
                                         <div class="ngCellText">
-                                            <div class="coverage-text">{{row.entity.percent_y_ion_coverage * 100|number:1}}% Coverage</div>
+                                            <div class="coverage-text">{{::row.entity.percent_y_ion_coverage * 100|number:1}}% Coverage</div>
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
@@ -390,7 +400,7 @@ do (()->
                         cellTemplate:
                                     '<div>
                                         <div class="ngCellText">
-                                            <div class="coverage-text">{{row.entity.percent_b_ion_with_HexNAc_coverage * 100 |number:1}}% Coverage</div>
+                                            <div class="coverage-text">{{::row.entity.percent_b_ion_with_HexNAc_coverage * 100 |number:1}}% Coverage</div>
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
@@ -405,7 +415,7 @@ do (()->
                         cellTemplate:
                                     '<div>
                                         <div class="ngCellText">
-                                            <div class="coverage-text">{{row.entity.percent_y_ion_with_HexNAc_coverage * 100|number:1}}% Coverage</div>
+                                            <div class="coverage-text">{{::row.entity.percent_y_ion_with_HexNAc_coverage * 100|number:1}}% Coverage</div>
                                             <fragment-ion ng-repeat="fragment_ion in row.getProperty(col.field)"></fragment-ion>
                                         </div>
                                     </div>'
@@ -414,16 +424,14 @@ do (()->
                 ]
                 # Class setting in outer-most div interpolates color class from the prediction's groupBy.
                 # Only color if the group is larger than 1 match
-                rowTemplate: '<div style="height: 100%" class="{{row.entity.groupBySize > 1 ? \'c\' + row.entity.groupBy % 6 : \'cX\'}}">
+                rowTemplate: '<div style="height: 100%" class="{{::row.entity.groupBySize > 1 ? \'c\' + row.entity.groupBy % 6 : \'cX\'}}">
                                 <div ng-style="{ \'cursor\': row.cursor }" ng-repeat="col in renderedColumns" ng-class="col.colIndex()" class="ngCell matched-ions-cell">
                                     <div class="ngVerticalBar" ng-style="{height: rowHeight}" ng-class="{ ngVerticalBarVisible: !$last }"> </div>
                                         <div ng-cell>
                                     </div>
                                 </div>
                             </div>'
-            }
-
-
+                            }
 
             activateFn($scope, $window, $filter)
             $window.ClassifierResultsTableCtrlInstance = $scope])

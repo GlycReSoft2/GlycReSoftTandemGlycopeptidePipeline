@@ -582,8 +582,12 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   margin: 0.5%;
   border: 1px solid #d4d4d4;
   width: 99%;
-  height: 100%;
+  height: 60%;
   border-radius: 5px;
+}
+.ngViewport.ng-scope {
+  height: 95% !important;
+  width: 100% !important;
 }
 .ngHeaderCell {
   text-align: center;
@@ -633,10 +637,17 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
   margin-left: 15px;
 }
 #filtrex-control-input {
-  width: 100%;
+  width: 60%;
   clear: both;
   float: none;
   border-radius: 5px;
+}
+#do-filt-btn {
+  margin: 4px;
+  margin-bottom: 7px;
+}
+.ambiguity-plot-container {
+  width: 100%;
 }
 .ambiguity-peptide-sequences-container {
   margin: 25px;

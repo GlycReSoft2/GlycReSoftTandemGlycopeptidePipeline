@@ -73,6 +73,17 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
 
         public String ResultsFilePath { get; set; }
 
+        private String _DecoyFilePath;
+        public String DecoyFilePath
+        {
+            get { return _DecoyFilePath; }
+            set
+            {
+                _DecoyFilePath = value;
+                OnPropertyChanged("DecoyFilePath");
+            }
+        }
+
         public AnalysisPipeline Pipeline = null;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -101,16 +112,15 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
             try
             {
 
-                MSDigestReport proteinProspectorReport = MSDigestReport.Load(ProteinProspectorMSDigestFilePath);
-                MSDigestReportParameters digestParameters = proteinProspectorReport.Parameters;
-
                 this.Pipeline = new AnalysisPipeline(MS1MatchFilePath, 
                     GlycosylationSiteFilePath, MS2DeconvolutionFilePath, 
                     modelFilePath: ModelFilePath, outputFilePath: null,
-                    constantModifications: proteinProspectorReport.ConstantModifications,
-                    variableModifications: proteinProspectorReport.VariableModifications,
+                    proteinProspectorXMLFilePath: ProteinProspectorMSDigestFilePath,
                     ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
                     ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
+                    numProcesses: ConfigurationManager.Algorithm.NumProcesses,
+                    numDecoys: ConfigurationManager.Algorithm.NumDecoys,
+                    onlyRandomDecoys: ConfigurationManager.Algorithm.OnlyRandomDecoys,
                     pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
                     rscriptPath: null);
 
@@ -134,16 +144,15 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
         /// <returns></returns>
         public ResultsRepresentation PrepareModelFile()
         {
-            MSDigestReport proteinProspectorReport = MSDigestReport.Load(ProteinProspectorMSDigestFilePath);
-            MSDigestReportParameters digestParameters = proteinProspectorReport.Parameters;
-
             this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
                 GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
                 modelFilePath: ModelFilePath, outputFilePath: null,
-                constantModifications: proteinProspectorReport.ConstantModifications,
-                variableModifications: proteinProspectorReport.VariableModifications,
+                proteinProspectorXMLFilePath: ProteinProspectorMSDigestFilePath,
                 ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
                 ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
+                numProcesses: ConfigurationManager.Algorithm.NumProcesses,
+                numDecoys: ConfigurationManager.Algorithm.NumDecoys,
+                onlyRandomDecoys: ConfigurationManager.Algorithm.OnlyRandomDecoys,
                 pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
                 rscriptPath: null);
 
@@ -157,11 +166,12 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.Controllers
             this.Pipeline = new AnalysisPipeline(MS1MatchFilePath,
                 GlycosylationSiteFilePath, MS2DeconvolutionFilePath,
                 modelFilePath: ModelFilePath, outputFilePath: null,
-                constantModifications: null,
-                variableModifications: null,
                 ms1MatchingTolerance: ConfigurationManager.Algorithm.MS1MassErrorTolerance,
                 ms2MatchingTolerance: ConfigurationManager.Algorithm.MS2MassErrorTolerance,
                 pythonInterpreterPath: ConfigurationManager.Scripting.PythonInterpreterPath,
+                numProcesses: ConfigurationManager.Algorithm.NumProcesses,
+                numDecoys: ConfigurationManager.Algorithm.NumDecoys,
+                onlyRandomDecoys: ConfigurationManager.Algorithm.OnlyRandomDecoys,
                 rscriptPath: null);
 
             ResultsRepresentation modelRepresentation = this.Pipeline.RunReclassification(reclassificationTargetFilePath, ModelFilePath);

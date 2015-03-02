@@ -1,5 +1,5 @@
 <!DOCTYPE html5>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" ng-app="GlycReSoftMSMSGlycopeptideResultsViewApp">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=11">
@@ -12,8 +12,9 @@
     <script type="text/javascript">
 
     //Chrome passes the error object (5th param) which we must use since it now truncates the Msg (1st param).
-    window.onerror = function (errorMsg, url, lineNumber, columnNumber, errorObject) {
+/*    window.onerror = function (errorMsg, url, lineNumber, columnNumber, errorObject) {
         var errMsg;
+        console.log(errorMsg, url, lineNumber, errorObject)
         if (errorObject && errorObject !== undefined) {
                 errMsg = errorObject.message;
         }
@@ -21,52 +22,25 @@
             errMsg = errorMsg;
         }
         alert('Error: ' + errMsg)
-    }
+    }*/
     </script>
     <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
-<body ng-app="GlycReSoftMSMSGlycopeptideResultsViewApp" ng-controller="ClassifierResultsTableCtrl">
+<body ng-controller="ClassifierResultsTableCtrl">
     <header id="header-wrapper">
         <div>
-            <!-- <button id="save-csv-btn" save-csv="" class="btn">Save CSV</button> -->
-            <save-csv id="save-csv-btn" isopen="false" predictions="predictions" predictions-unfiltered="_predictions"></save-csv>
+            <save-results id="save-results-btn" isopen="false" predictions="predictions" predictions-unfiltered="_predictions" metadata="metadata">
+            </save-results>
         </div>
-        <h2 id="header-title">{{name}}</h2>
+        <h2 id="header-title">{{params.name}}</h2>
         <div>
           <button id="help-btn" help-menu="" class="btn btn-info"><b>?</b></button>
         </div>
     </header>
-<!--     <div id="grid-controls">
-        <div id="top-control-row">
-            <div id="filtrex-control">
-                <div id="filtrex-control-inner" class="input-group" ng-class="{&apos;has-error&apos;: filtrexError}">
-                    <b>Filtering Expression</b>
-                    <a class="filtrex-ctrl-anchor" popover-html-unsafe="{{helpText.filtrex}}">Usage</a>
-                    <a class="filtrex-ctrl-anchor" popover-html-unsafe="{{&apos;&lt;b&gt;&apos; + headerSubstituitionDictionary.NAME_MAP.join(&apos;&lt;br\&gt;&apos;) + &apos;&lt;/b&gt;&apos;}}">Filterable Names</a>
-                    <a class="filtrex-ctrl-anchor" ng-click="params.filtrexExamples = !params.filtrexExamples">Example Rules</a>
-                    <span dropdown="" class="filtrex-ctrl-anchor" is-open="params.filtrexExamples">
-                          <ul class="dropdown-menu ">
-                            <li><b>&#xA0;Click to add to the filter expression</b></li>
-                            <li ng-repeat="(rule, ruleFeatures) in filterRules">
-                              <a ng-click="extendFiltrex(ruleFeatures.filtrex)">{{ruleFeatures.label}}</a>
-                            </li>
-                          </ul>
-                    </span>
-                    <br><input type="text" id="filtrex-control-input" class="form-control" ng-model="params.filtrexExpr" ng-model-options="{updateOn: &apos;blur default&apos;, debounce: {&apos;default&apos;: 20000, &apos;blur&apos;: 0}}"> {{predictions.length}} Matches
-                </div>
-            </div>
-        </div> -->
-        <!-- <div id="bottom-control-row">
-            <select class='grid-grouping-fn-selector-box' ng-model='params.currentGroupingRule'
-            ng-options='value.label for (key, value) in groupingRules'
-            ng-change="ping()">
-            </select>
-        </div> -->
-
     <div id="classifier-results" style="">
         <tabset>
-            <tab heading="Prediction Results Table" active="" select="scrollToSelection()">
-                <div class="gridStyle" ng-grid="gridOptions" resizable="" window-percent="0.6"></div>
+            <tab heading="Prediction Results Table" select="scrollToSelection()">
+                <div class="gridStyle" ng-grid="gridOptions"></div>
                 <div id="grid-controls">
                     <div id="top-control-row">
                         <div id="filtrex-control">
@@ -83,11 +57,17 @@
                                         </li>
                                       </ul>
                                 </span>
-                                <br><input type="text" id="filtrex-control-input" class="form-control" ng-model="params.filtrexExpr" ng-model-options="{updateOn: &apos;blur default&apos;, debounce: {&apos;default&apos;: 20000, &apos;blur&apos;: 0}}"> {{predictions.length}} Matches
+                                <br>
+                                <input type="text" id="filtrex-control-input" class="form-control" ng-model="params.filtrexExpr" ng-model-options="{updateOn: &apos;blur default&apos;, debounce: {&apos;default&apos;: 20000, &apos;blur&apos;: 0}}">
+                                <button class="btn" id="do-filt-btn" ng-click="filterByFiltrex()">Filter</button>
+                                {{predictions.length}} Matches
                             </div>
                         </div>
                     </div>
                 </div>
+            </tab>
+            <tab heading="Metadata">
+                <metadata-display metadata="metadata"></metadata-display>
             </tab>
             <tab heading="Prediction Plots" select="sendRenderPlotEvt()">
                 <div ambiguity-plot="" predictions="predictions" headers="headerSubstituitionDictionary"></div>
@@ -108,30 +88,13 @@
     <script type="text/javascript">
     $(function(){
         window.objects = []
-        console.log(console.log)
-        window.registerDataChange = function (data, name){
-            try{
-                ctrl = angular.element("#classifier-results").controller()
-                objects = CsvService.setDefaultValues(CsvService.deserializeAfterParse(data))
-                ctrl.$apply(function(){
-                        ctrl.name = name === undefined ? ctrl.name : name;
-                        ctrl._predictionsReceiver = objects
-                })
-                return ctrl._predictionsReceiver.length;
-            } catch (ex){
-                alert("An error occurred while injecting data: " + ex)
-            }
-
-        }
+        console.log("Page Ready")
         try{
-            d3.csv("/../Data/ExampleResults.csv", function(err, data){
+            d3.json("/../Data/ExampleResults.json", function(err, data){
                 if(err != null) console.log(err)
                 testObjects = _.cloneDeep(data)
-                ctrl = angular.element("#classifier-results").controller()
-                objects = CsvService.setDefaultValues(CsvService.deserializeAfterParse(data))
-                ctrl.$apply(function(){
-                    ctrl._predictionsReceiver = objects
-                })
+                ctrl = angular.element("#classifier-results").scope()
+                ctrl.update(data)
             })
         } catch (ex) {
             console.log(ex)
@@ -195,8 +158,8 @@
                 <td class='glycopeptide-identifier' ng-bind-html='match.Glycopeptide_identifier | highlightModifications'></td>
                 <td>{{match.meanCoverage | number:4}}</td>
                 <td>{{match.Stub_ions.length}}</td>
-                <td>{{match.percent_b_ion_coverage * 100|number:1}}%({{match.percent_b_ion_with_HexNAc_coverage * 100|number:1}}%) |
-                    {{match.percent_y_ion_coverage * 100|number:1}}%({{match.percent_y_ion_with_HexNAc_coverage * 100|number:1}}%)
+                <td>{{match.percent_b_ion_coverage * 100|number:1}}%({{(match.percent_b_ion_with_HexNAc_coverage * 100)|number:1}}%) |
+                    {{match.percent_y_ion_coverage * 100|number:1}}%({{(match.percent_y_ion_with_HexNAc_coverage * 100)|number:1}}%)
                     </td>
                 <td>{{match.MS2_Score}}</td>
             </tr>
@@ -359,7 +322,13 @@
         </section>
     </section>
 </article>
-</script><script type="text/ng-template" id="templates/modal-template.html">
+</script><script type="text/ng-template" id="templates/metadata-display.html">
+<div class="metadata-container">
+    <div class="metadata-section" ng-repeat="(name, content) in metadata" ng-if="policy[name].display">
+        <div ng-if="policy[name].includeUrl" ng-include="policy[name].includeUrl" scope="" onload=""></div>
+        <div ng-if="policy[name].includeHtml" ng-bind="policy[name].includeUrl"></div>
+    </div>
+</div></script><script type="text/ng-template" id="templates/modal-template.html">
 <div class="modal-header">
     <h3 class="modal-title">I'm a modal!</h3>
 </div>
@@ -375,10 +344,18 @@
     <button class="btn btn-primary" ng-click="ok()">OK</button>
     <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
 </div>
-</script><script type="text/ng-template" id="templates/save-csv-menu.html">
+</script><script type="text/ng-template" id="templates/modification-list.html">
+<div>
+    <b>{{ name|inflector:"humanize"}}</b>
+    <ul>
+        <li ng-repeat="mod in content" style="color: {{getColor(mod)}} ;">
+            {{mod}}
+        </li>
+    </ul>
+</div></script><script type="text/ng-template" id="templates/save-menu.html">
 <div class='btn-group'  dropdown is-open="isopen">
     <button type="button" class="btn save-btn dropdown-toggle">
-        Save Csv <span class='caret'></span>
+        Save Results <span class='caret'></span>
     </button>
     <ul class="dropdown-menu" role="menu">
         <li><a class='save-filter-results-anchor' href="#">Save Filtered Results</a></li>

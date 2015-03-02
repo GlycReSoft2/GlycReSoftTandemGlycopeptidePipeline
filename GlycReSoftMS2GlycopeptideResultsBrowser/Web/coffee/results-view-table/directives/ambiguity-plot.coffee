@@ -118,7 +118,6 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
                 return groupId
             ionSeries = []
             notAmbiguous = []
-            perfectAmbiguous = [] #Unused
             _.forEach ionGroupings, (group, id) ->
                 if group.length == 1
                     notAmbiguous.push {data: group, name: groupingName + " " + id}
@@ -131,7 +130,6 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
     updatePlot = (predictions, scope, element) ->
         # Get grouping configuration bound from UI
         groupParams = scope.grouping.groupingFnKey
-        #console.log "Grouping Parameters: ", groupParams
         # Generate grouped series data
         scope.seriesData = groupParams.groupingFn(predictions)
         #console.log("Series Data: ", scope.seriesData)
@@ -142,8 +140,7 @@ angular.module("GlycReSoftMSMSGlycopeptideResultsViewApp").directive "ambiguityP
         # Initialize the plot template object, passing grouping labels
         plotOptions = ambiguityPlotTemplater(scope, ionSeries, xAxisTitle=groupParams.xAxisTitle,
             yAxisTitle=groupParams.yAxisTitle, plotType=groupParams.plotType)
-        # Render the plot using HighCharts
-        #console.log(plotOptions)
+        # Render the plot
         chart = element.find(".ambiguity-plot-container")
         chart.highcharts(plotOptions)
         return true

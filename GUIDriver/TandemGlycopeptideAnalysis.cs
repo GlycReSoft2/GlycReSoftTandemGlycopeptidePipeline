@@ -58,8 +58,12 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             //Set the active item to the functionality label which has no function
             SelectModelComboBox.SelectedItem = SELECT_MODEL_DEFAULT;
 
-
-            if (!ConfigurationManager.Scripting.PythonDependenciesInstalled)
+            var checkProg = new ProcessManager("python", " -c \"import pandas, glycresoft_ms2_classification\"");
+            checkProg.Start();
+            checkProg.WaitForExit();
+            Console.WriteLine(checkProg.GenerateDumpMessage());
+            Console.WriteLine(checkProg.CheckExitSuccessfully());
+            if (!ConfigurationManager.Scripting.PythonDependenciesInstalled && !(checkProg.CheckExitSuccessfully()))
             {
                 MessageBox.Show("If you have not yet verified you have installed all the Python dependencies, please go to the Scripting Settings Menu and use the verification command there.\n\r\n\rYou will need Pandas and Scikit-Learn, which depend upon NumPy and SciPy. If you don't yet have these, I suggest you try installing a scientific Python distribution like Anaconda(http://continuum.io/downloads) or Canopy(https://store.enthought.com/)");
             }
@@ -448,6 +452,36 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI
             catch (TandemGlycoPeptidePipelineException ex)
             {
                 Console.WriteLine(ex);
+            }
+        }
+
+        private void CSVExportButton_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.Filter = "JSON file|*.json";
+            DialogResult targetFileDialogResult = openFileDialog1.ShowDialog();
+            if (targetFileDialogResult == DialogResult.OK)
+            {
+                try
+                {
+                    String targetFilePath = openFileDialog1.FileName;
+                    SaveFileDialog fileSaver = new SaveFileDialog();
+                    fileSaver.DefaultExt = "csv";
+                    fileSaver.Filter = "Comma separated volume|*.csv";
+                    fileSaver.FileName = Path.Combine(Path.GetDirectoryName(targetFilePath), Path.GetFileNameWithoutExtension(targetFilePath) + ".csv");
+                    DialogResult resultFileDialog = fileSaver.ShowDialog();
+                    if (resultFileDialog == DialogResult.OK)
+                    {
+                        String resultFileName = fileSaver.FileName;
+                        ScriptManager scripter = new ScriptManager(ConfigurationManager.Scripting.PythonInterpreterPath);
+                        scripter.ConvertToCSV(targetFilePath, resultFileName);
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("An error occurred while processing this task: " + ex.Message);
+                    WaitScreen.Close();
+                }
             }
         }
 

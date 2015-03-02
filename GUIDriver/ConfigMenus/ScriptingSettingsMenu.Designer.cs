@@ -35,6 +35,7 @@
             this.CancelMenuButton = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.CheckPythonDependenciesButton = new System.Windows.Forms.Button();
+            this.DependencyCheckIndicator = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -95,11 +96,21 @@
             this.CheckPythonDependenciesButton.UseVisualStyleBackColor = true;
             this.CheckPythonDependenciesButton.Click += new System.EventHandler(this.CheckPythonDependenciesButton_Click);
             // 
+            // DependencyCheckIndicator
+            // 
+            this.DependencyCheckIndicator.AutoSize = true;
+            this.DependencyCheckIndicator.Location = new System.Drawing.Point(174, 60);
+            this.DependencyCheckIndicator.Name = "DependencyCheckIndicator";
+            this.DependencyCheckIndicator.Size = new System.Drawing.Size(10, 13);
+            this.DependencyCheckIndicator.TabIndex = 8;
+            this.DependencyCheckIndicator.Text = "-";
+            // 
             // ScriptingSettingsMenu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(284, 262);
+            this.Controls.Add(this.DependencyCheckIndicator);
             this.Controls.Add(this.CheckPythonDependenciesButton);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.CancelMenuButton);
@@ -121,5 +132,6 @@
         private System.Windows.Forms.Button CancelMenuButton;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button CheckPythonDependenciesButton;
+        private System.Windows.Forms.Label DependencyCheckIndicator;
     }
 }

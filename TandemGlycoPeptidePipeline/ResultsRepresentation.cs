@@ -4,9 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using CsvHelper;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
+using Newtonsoft.Json.Linq;
 using System.IO;
 using System.ComponentModel;
 using System.Globalization;
@@ -15,7 +13,12 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
 {
     public class ResultsRepresentation
     {
+        [JsonProperty("predictions")]
         public List<GlycopeptidePrediction> MatchedPredictions;
+        [JsonProperty("metadata")]
+        //public Dictionary<String, dynamic> Metadata;
+        public JObject Metadata;
+        [JsonIgnore()]
         public String SourceFile = null;
 
         public ResultsRepresentation()
@@ -32,30 +35,20 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public ResultsRepresentation(String resultsFilePath)
         {
             StreamReader textReader = new StreamReader(resultsFilePath);
-            CsvReader csv = new CsvReader(textReader);
-            csv.Configuration.SkipEmptyRecords = true;
-            csv.Configuration.RegisterClassMap<GlycopeptidePredictionMap>();
-            TypeConverterFactory.AddConverter<IonFragment[]>(new IonFragmentConverter());
-            try
-            {
-                this.MatchedPredictions = csv.GetRecords<GlycopeptidePrediction>().ToList();
-            }
-            catch (CsvMissingFieldException missingFieldEx)
-            {
-                Console.WriteLine(missingFieldEx);
-                throw;
-            }            
+            String textRepresentation = textReader.ReadToEnd();
+            ResultsRepresentation interm = JsonConvert.DeserializeObject<ResultsRepresentation>(textRepresentation);
+            this.MatchedPredictions = interm.MatchedPredictions;
+            this.Metadata = interm.Metadata;            
             this.SourceFile = resultsFilePath;
             textReader.Close();
         }
 
         public ResultsRepresentation(StreamReader reader, String fileName)
         {
-            CsvReader csv = new CsvReader(reader);
-            csv.Configuration.SkipEmptyRecords = true;
-            csv.Configuration.RegisterClassMap<GlycopeptidePredictionMap>();
-            TypeConverterFactory.AddConverter<IonFragment[]>(new IonFragmentConverter());
-            this.MatchedPredictions = csv.GetRecords<GlycopeptidePrediction>().ToList();
+            String textRepresentation = reader.ReadToEnd();
+            ResultsRepresentation interm = JsonConvert.DeserializeObject<ResultsRepresentation>(textRepresentation);
+            this.MatchedPredictions = interm.MatchedPredictions;
+            this.Metadata = interm.Metadata;          
             this.SourceFile = fileName;
             reader.Close();
         }
@@ -68,24 +61,7 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public static ResultsRepresentation ParseCsv(String resultsFilePath)
         {
             return new ResultsRepresentation(resultsFilePath);
-        }
-
-        public void WriteToCsv(String filePath)
-        {
-            StreamWriter writer = new StreamWriter(File.OpenWrite(filePath));
-            this.WriteToCsv(writer);
-        }
-
-        public void WriteToCsv(StreamWriter writer, bool closeAtEnd = true)
-        {
-            CsvWriter csv = new CsvWriter(writer);
-            csv.Configuration.RegisterClassMap<GlycopeptidePredictionMap>();
-            csv.Configuration.SkipEmptyRecords = true;
-            TypeConverterFactory.AddConverter<IonFragment[]>(new IonFragmentConverter());
-            TypeConverterFactory.AddConverter<CallRFactorBoolConverter>(new CallRFactorBoolConverter());
-            csv.WriteRecords(MatchedPredictions);
-            if(closeAtEnd) writer.Close();
-        }
+        }        
 
         public void WriteToJson(StreamWriter writer, bool closeAtEnd = true)
         {
@@ -93,7 +69,6 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             writer.Write(serialized);
             if (closeAtEnd) writer.Close();
         }
-
     }
 
     /// <summary>
@@ -101,72 +76,110 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
     /// </summary>
     public class GlycopeptidePrediction
     {
+        [JsonProperty("MS1_Score")]
         public double MS1Score {get; set;}
-
+        [JsonProperty("Obs_Mass")]
         public double ObsMass { get; set; }
+        [JsonProperty("Calc_mass")]
         public double CalcMass{get; set;}
-
+        [JsonProperty("ppm_error")]
         public double PPMError{get; set;}
-        public double AbsPPMError{get; set;}
-
+        [JsonProperty("Peptide")]
         public String Peptide{get; set;}
+        [JsonProperty("Peptide_mod")]
         public String PeptideMod{get; set;}
+        [JsonProperty("Glycan")]
         public String Glycan{get; set;}
+        [JsonProperty("peptideLens")]
         public int PeptideLens{get; set;}
-
+        [JsonProperty("vol")]
         public double Volume{get; set;}
 
+        [JsonProperty("glyco_sites")]
         public int NumGlycoSites{get; set;}
+        [JsonProperty("startAA")]
         public int StatAA{get; set;}
+        [JsonProperty("endAA")]
         public int EndAA{get; set;}
 
+        [JsonProperty("Seq_with_mod")]
         public String SeqWithMod{get; set;}
+        [JsonProperty("Glycopeptide_identifier")]
         public String GlycopeptideIdentifier{get; set;}
-
+        [JsonProperty("Oxonium_ions")]
         public IonFragment[] OxoniumIons{get; set;}
+        [JsonProperty("numOxIons")]
         public int NumOxIons{get; set;}
-
+        [JsonProperty("bare_b_ions")]
         public IonFragment[] BareBIons{get; set;}
+        [JsonProperty("total_b_ions_possible")]
         public double TotalBIonsPossible { get; set; }
 
+        [JsonProperty("bare_y_ions")]
         public IonFragment[] BareYIons{get; set;}
+        [JsonProperty("total_y_ions_possible")]
         public double TotalYIonsPossible { get; set; }
 
+        [JsonProperty("b_ions_with_HexNAc")]
         public IonFragment[] BIonsWithHexNAc{get; set;}
+        [JsonProperty("possible_b_ions_HexNAc")]
         public double PercentBIonWithHexNAcCoverage { get; set; }
 
+        [JsonProperty("y_ions_with_HexNAc")]
         public IonFragment[] YIonsWithHexNAc{get; set;}
+        [JsonProperty("possible_y_ions_HexNAc")]
         public double PercentYIonWithHexNAcCoverage { get; set; }
 
+        [JsonProperty("b_ion_coverage")]
         public IonFragment[] BIonCoverage{get; set;}
+        [JsonProperty("percent_b_ion_coverage")]
         public double PercentBIonCoverage { get; set; }
 
+        [JsonProperty("y_ion_coverage")]
         public IonFragment[] YIonCoverage{get; set;}
+        [JsonProperty("percent_y_ion_coverage")]
         public double PercentYIonCoverage { get; set; }
 
+        [JsonProperty("Stub_ions")]
         public IonFragment[] StubIons{get; set;}
-
+        [JsonProperty("numStubs")]
         public int NumStubsFound{get; set;}
 
+        [JsonProperty("meanCoverage")]
         public double MeanPerSiteCoverage{get; set;}
+        [JsonProperty("percentUncovered")]
         public double PercentUncovered{get; set;}
 
+        [JsonProperty("meanHexNAcCoverage")]
         public double MeanHexNAcIonCoverage { get; set;}
 
+        [JsonProperty("peptideCoverageMap")]
         public double[] PeptideCoverageMap { get; set;}
+        [JsonProperty("bIonCoverageMap")]
         public double[] BIonPeptideCoverageMap { get; set; }
+        [JsonProperty("yIonCoverageMap")]
         public double[] YIonPeptideCoverageMap { get; set; }
+        [JsonProperty("hexNAcCoverageMap")]
         public double[] HexNAcCoverageMap { get; set; }
+        [JsonProperty("bIonCoverageWithHexNAcMap")]
         public double[] BIonHexNAcCoverageMap { get; set; }
+        [JsonProperty("yIonCoverageWithHexNAcMap")]
         public double[] YIonHexNAcCoverageMap { get; set; }
 
+        [JsonProperty("MS2_Score")]
         public double MS2Score { get; set; }
-        
+
+        [JsonProperty("call")]
         public bool Call{get; set;}
+        [JsonProperty("ambiguity")]
         public bool Ambiguity { get; set; }
 
+        [JsonProperty("scan_id")]
         public string ScanId { get; set; }
 
+        public Dictionary<String, int> GlycanComposition { get; set; }
+        
+        
         public String IonCounts
         {
             get
@@ -184,66 +197,13 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             }
         }
 
+
+
         public override string ToString()
         {
             return JsonConvert.SerializeObject(this, Formatting.Indented);
         }
 
-    }
-    public sealed class GlycopeptidePredictionMap : CsvClassMap<GlycopeptidePrediction>
-    {
-        public GlycopeptidePredictionMap()
-        {
-            Map(m => m.MS1Score).Name("MS1_Score");
-            Map(m => m.MS2Score).Name("MS2_Score").Default(0.0);
-            Map(m => m.ObsMass).Name("Obs_Mass");
-            Map(m => m.CalcMass).Name("Calc_mass");
-            Map(m => m.PPMError).Name("ppm_error");
-            Map(m => m.AbsPPMError).Name("abs_ppm_error");
-            Map(m => m.Peptide).Name("Peptide");
-            Map(m => m.PeptideMod).Name("Peptide_mod");
-            Map(m => m.Glycan).Name("Glycan");
-            Map(m => m.PeptideLens).Name("peptideLens");
-            Map(m => m.Volume).Name("vol");
-            //Map(m => m.NumGlycoSites).Name("num_glycosites");
-            Map(m => m.NumGlycoSites).Name("glyco_sites");
-            Map(m => m.StatAA).Name("startAA");
-            Map(m => m.EndAA).Name("endAA");
-            Map(m => m.SeqWithMod).Name("Seq_with_mod");
-            Map(m => m.GlycopeptideIdentifier).Name("Glycopeptide_identifier");
-            Map(m => m.OxoniumIons).Name("Oxonium_ions").TypeConverter<IonFragmentConverter>();
-            Map(m => m.NumOxIons).Name("numOxIons");
-            Map(m => m.BareBIons).Name("bare_b_ions").TypeConverter<IonFragmentConverter>();
-            Map(m => m.TotalBIonsPossible).Name("total_b_ions_possible");
-            Map(m => m.BareYIons).Name("bare_y_ions").TypeConverter<IonFragmentConverter>();
-            Map(m => m.TotalYIonsPossible).Name("total_y_ions_possible");
-
-            Map(m => m.BIonsWithHexNAc).Name("b_ions_with_HexNAc").TypeConverter<IonFragmentConverter>();
-            Map(m => m.YIonsWithHexNAc).Name("y_ions_with_HexNAc").TypeConverter<IonFragmentConverter>();
-            Map(m => m.BIonCoverage).Name("b_ion_coverage").TypeConverter<IonFragmentConverter>();
-            Map(m => m.YIonCoverage).Name("y_ion_coverage").TypeConverter<IonFragmentConverter>();
-
-            Map(m => m.PercentBIonCoverage).Name("percent_b_ion_coverage").Default(0);
-            Map(m => m.PercentYIonCoverage).Name("percent_y_ion_coverage").Default(0);
-            Map(m => m.PercentBIonWithHexNAcCoverage).Name("percent_b_ion_with_HexNAc_coverage").Default(0);
-            Map(m => m.PercentYIonWithHexNAcCoverage).Name("percent_y_ion_with_HexNAc_coverage").Default(0);
-            
-            Map(m => m.StubIons).Name("Stub_ions").TypeConverter<IonFragmentConverter>();
-            Map(m => m.NumStubsFound).Name("numStubs");
-            Map(m => m.MeanPerSiteCoverage).Name("meanCoverage");
-            Map(m => m.MeanHexNAcIonCoverage).Name("meanHexNAcCoverage");
-            
-            Map(m => m.PeptideCoverageMap).Name("peptideCoverageMap").TypeConverter<DoubleArrayConverter>();
-            Map(m => m.HexNAcCoverageMap).Name("hexNAcCoverageMap").TypeConverter<DoubleArrayConverter>();
-            Map(m => m.BIonPeptideCoverageMap).Name("bIonCoverageMap").TypeConverter<DoubleArrayConverter>();
-            Map(m => m.BIonHexNAcCoverageMap).Name("bIonCoverageWithHexNAcMap").TypeConverter<DoubleArrayConverter>();
-            Map(m => m.YIonPeptideCoverageMap).Name("yIonCoverageMap").TypeConverter<DoubleArrayConverter>();
-            Map(m => m.YIonHexNAcCoverageMap).Name("yIonCoverageWithHexNAcMap").TypeConverter<DoubleArrayConverter>();
-            Map(m => m.PercentUncovered).Name("percentUncovered");
-            Map(m => m.Call).Name("call").TypeConverterOption(true, "TRUE").TypeConverterOption(false, "FALSE");
-            Map(m => m.Ambiguity).Name("ambiguity").TypeConverterOption(true, "TRUE").TypeConverterOption(false, "FALSE");
-            Map(m => m.ScanId).Name("scan_id");
-        }
     }
 
     public class IonFragment
@@ -275,101 +235,25 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         {
             return JsonConvert.SerializeObject(this, Formatting.Indented);
         }
-
     }
 
-    public class IonFragmentConverter : EnumerableConverter 
-    {
-        public override bool CanConvertFrom(System.Type type)
-        {
-            if (type == typeof(String))
-            {
-                return true;
-            }
-            return false;
-        }
-        public override object ConvertFromString(TypeConverterOptions options, String text)
-        {
-            IonFragment[] frags = IonFragment.ParseArray(text);
-            return frags;
-        }
+    public class FalseDiscoveryRateTestResult {
+        [JsonProperty("num_real_matches")]
+        public int RealIonsMatched { get; set; }
+        [JsonProperty("num_decoy_matches")]
+        public int DecoyIonsMatched { get; set; }
+        [JsonProperty("false_discovery_rate")]
+        public float FalseDiscoveryRate { get; set; }
+        [JsonProperty("modification_signature")]
+        public string ModificationSignature { get; set; }
+        [JsonProperty("threshold")]
+        public Dictionary<string, dynamic> Threshold { get; set; }
 
-        public override String ConvertToString(TypeConverterOptions options, object value)
+        public override string ToString()
         {
-            return JsonConvert.SerializeObject((IonFragment[])value);
+            return JsonConvert.SerializeObject(this, Formatting.Indented);
         }
     }
 
-    public class DoubleArrayConverter : EnumerableConverter
-    {
-        public override bool CanConvertFrom(Type type)
-        {
-            if (type == typeof(String))
-            {
-                return true;
-            }
-            return false;
-        }
-        public override object ConvertFromString(TypeConverterOptions options, string text)
-        {
-            double[] coverageMap = JsonConvert.DeserializeObject<double[]>(text);
-            return coverageMap;
-        }
-        public override string ConvertToString(TypeConverterOptions options, object value)
-        {
-            return JsonConvert.SerializeObject(value as double[]);
-        }
-    }
-
-    public class ArrayConverter<T> : EnumerableConverter
-    {
-        public override bool CanConvertFrom(Type type)
-        {
-            if (type == typeof(String))
-            {
-                return true;
-            }
-            return false;
-        }
-        public override object ConvertFromString(TypeConverterOptions options, string text)
-        {
-            T[] coverageMap = JsonConvert.DeserializeObject<T[]>(text);
-            return coverageMap;
-        }
-        public override string ConvertToString(TypeConverterOptions options, object value)
-        {
-            return JsonConvert.SerializeObject(value as T[]);
-        }
-    }
-
-    public class CallRFactorBoolConverter : CsvHelper.TypeConversion.BooleanConverter
-    {
-        public override string ConvertToString(TypeConverterOptions options, object value)
-        {
-            //Console.Write("In ConvertTo: {0} ", (bool)value);
-            if (value == null)
-            {
-                return "Dud";
-            }
-            var boolVal = (bool)value;
-            var retVal = boolVal ? "Yes" : "No";
-            return retVal;
-        }
-
-        public override object ConvertFromString(TypeConverterOptions options, String text)
-        {
-            //Console.WriteLine("In ConvertFrom {0}", text);
-            if (text == "Yes")
-            {
-                return true;
-            }
-            else if (text == "No")
-            {
-                return false;
-            }
-            else return false;
-            
-        }
-    }
 
 }

@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
 {
+    public enum DependencyInstalledState
+    {
+        Unknown, Yes, No
+    }
     /// <summary>
     /// Represent the relevant information for interacting with the scripting applications on the host machine
     /// </summary>
@@ -19,13 +23,30 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.ConfigMenus
         public double Version { get; set; }
 
         public String PythonInterpreterPath { get; set; }
-        public Boolean PythonDependenciesInstalled { get; set; }
+        public DependencyInstalledState DependenciesFound { get; set; }
+        public Boolean PythonDependenciesInstalled {
+            get
+            {
+                return (DependenciesFound == DependencyInstalledState.Yes);
+            }
+            set
+            {
+                if (value)
+                {
+                    DependenciesFound = DependencyInstalledState.Yes;
+                }
+                else
+                {
+                    DependenciesFound = DependencyInstalledState.No;
+                }
+            }
+        }
 
         public ScriptingSettings()
         {
             Version = SchemaVersion;
             PythonInterpreterPath = "";
-            PythonDependenciesInstalled = false;
+            DependenciesFound = DependencyInstalledState.Unknown;
         }
 
         //public override string ToString()

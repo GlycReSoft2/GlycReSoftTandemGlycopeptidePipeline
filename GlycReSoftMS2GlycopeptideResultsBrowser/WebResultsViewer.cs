@@ -40,11 +40,11 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
             BrowserCtrl.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(delegate(Object o, WebBrowserDocumentCompletedEventArgs e)
             {
                 JavaScriptAction(@"window.objects = window.external.DataProvider; 
-                                   registerDataChange(d3.csv.parse(window.external.DataProvider), window.external.FileName);
+                                   registerDataChange(PredictionResults.parse(window.external.DataProvider), window.external.FileName);
                                    ");
                 //Remove previously registered click handler and adds native save
                 //function call
-                JavaScriptAction("$('#save-csv-btn .save-all-results-anchor').off('click').click(function(evt){window.external.SaveResultsToFile()})");
+                JavaScriptAction("$('#save-results-btn .save-all-results-anchor').off('click').click(function(evt){window.external.SaveResultsToFile()})");
                 //JavaScriptAction("console.log = window.external.ExternLog");
             });
             BrowserCtrl.ScriptErrorsSuppressed = false;
@@ -61,8 +61,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
             DataProvider = File.ReadAllText(Path.Combine(Application.StartupPath, "Data", "ExampleResults.csv"));
             BrowserCtrl.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(delegate(Object o, WebBrowserDocumentCompletedEventArgs e)
             {
-                JavaScriptAction("registerDataChange(d3.csv.parse(window.external.DataProvider));");
-                JavaScriptAction("$('#save-csv .save-all-results-anchor').click(function(evt){window.external.ExternLog('save-all-clicked')})");
+                InitJSActions();
             });
             BrowserCtrl.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(delegate(Object o, WebBrowserDocumentCompletedEventArgs e)
             {              
@@ -73,6 +72,20 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
                 };
             });
         }
+
+
+        void InitJSActions()
+        {
+            JavaScriptAction("$('#save-results-btn .save-all-results-anchor').click(function(evt){alert('save-all-clicked')})");
+            JavaScriptAction(@"window.objects = window.external.DataProvider; 
+                               registerDataChange(PredictionResults.parse(window.external.DataProvider), window.external.FileName);
+                             ");
+            //Remove previously registered click handler and adds native save
+            //function call
+            JavaScriptAction("$('#save-results-btn .save-all-results-anchor').off('click').click(function(evt){window.external.SaveResultsToFile()})");
+            //JavaScriptAction("console.log = window.external.ExternLog");
+        }
+
 
         /// <summary>
         /// Execute arbitrary JavaScript by injecting script tags
@@ -93,7 +106,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
         public void SaveResultsToFile()
         {
             SaveFileDialog saveModelFileDialog = new SaveFileDialog();
-            saveModelFileDialog.Filter = "Comma Separated Text|*.csv|JSON Format|*.json";
+            saveModelFileDialog.Filter = "JSON Format|*.json";
             saveModelFileDialog.Title = "Save a Model File";
             saveModelFileDialog.ShowDialog();
             try
@@ -102,10 +115,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
                 {
                     Console.WriteLine("Saving Model");
                     var saveFileStreamWriter = new StreamWriter((FileStream)saveModelFileDialog.OpenFile());
-                    if (saveModelFileDialog.FilterIndex == 1) Model.WriteToCsv(saveFileStreamWriter);
-                    else if (saveModelFileDialog.FilterIndex == 2) Model.WriteToJson(saveFileStreamWriter);
-                    //Default
-                    else Model.WriteToCsv(saveFileStreamWriter);
+                    Model.WriteToJson(saveFileStreamWriter);
                 }
             }
             catch (IOException ex)
@@ -124,7 +134,7 @@ namespace GlycReSoft.MS2GlycopeptideResultsBrowser
         {
             string tempFile = Path.GetTempFileName();
             StreamWriter tempWriter = new StreamWriter(File.OpenWrite(tempFile));
-            model.WriteToCsv(tempWriter);
+            model.WriteToJson(tempWriter);
             string modelString = File.ReadAllText(tempFile);
             File.Delete(tempFile);
             return modelString;

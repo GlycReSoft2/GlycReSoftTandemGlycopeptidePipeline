@@ -36,19 +36,28 @@ namespace GlycReSoft.TandemMSGlycopeptideGUI.GridViews
             double ms1Score = (double)gridView.Rows[0].Cells.GetCellValueFromColumnHeader("MS1 Score");
             double obsMass = (double)gridView.Rows[0].Cells.GetCellValueFromColumnHeader("MS1 Score");
             Color rowColor = ColorProvider.GetColor();
-            int timeElapsed = Environment.TickCount;
+            int cnt = 0;
             foreach (DataGridViewRow row in gridView.Rows)
             {
-                int timeTick = Environment.TickCount;                
-                double nextMS1Score = (double)row.Cells.GetCellValueFromColumnHeader("MS1 Score");
-                double nextObsMass = (double)row.Cells.GetCellValueFromColumnHeader("MS1 Score");
-                if (nextMS1Score != ms1Score && nextObsMass != obsMass)
+                try
                 {
-                    rowColor = ColorProvider.GetColor();
-                    ms1Score = nextMS1Score;
-                    obsMass = nextObsMass;
+                    Console.WriteLine(cnt);
+                    Console.WriteLine(row);
+                    cnt++;
+                    double nextMS1Score = (double)row.Cells.GetCellValueFromColumnHeader("MS1 Score");
+                    double nextObsMass = (double)row.Cells.GetCellValueFromColumnHeader("MS1 Score");
+                    if (nextMS1Score != ms1Score && nextObsMass != obsMass)
+                    {
+                        rowColor = ColorProvider.GetColor();
+                        ms1Score = nextMS1Score;
+                        obsMass = nextObsMass;
+                    }
+                    row.DefaultCellStyle.BackColor = rowColor;
                 }
-                row.DefaultCellStyle.BackColor = rowColor;
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
         }
 

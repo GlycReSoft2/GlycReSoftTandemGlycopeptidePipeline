@@ -18,13 +18,17 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
     /// </summary>
     public class ScriptManager
     {
+        /// <summary>
+        /// The name of the entry point script, since multiprocessing, __main__ and Windows do not play
+        /// well together under Python 2.7, at least with our set of dependencies.
+        /// </summary>
+        //public static String EntryPointFileName = "python";
 
-        public static String PYTHON_PIPELINE_OUTFILE = "python-pipeline-outputfile";
+        public static String EntryPointCommand = " -c \"import sys;from pkg_resources import load_entry_point;sys.exit(load_entry_point('GlycReSoft', 'console_scripts', 'glycresoft-ms2')());\" ";
 
         #region Data Members
         public String PythonExecutablePath;
         public String RscriptExecutablePath;
-        public String ScriptRoot;
         public Dictionary<string, string> Data;
 
         //Storage for retrieving information in another context
@@ -32,6 +36,16 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         //Useful for both debugging and inspecting the output of the last ProcessManager
         //to exit successfully.
         public ProcessManager LastCall = null;
+
+        public String PythonEntryPoint
+        {
+            get
+            {
+
+                return PythonExecutablePath + EntryPointCommand;
+            }
+        }
+
         #endregion
 
         #region Default Parameters
@@ -40,11 +54,6 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
          * paths are modifiable so that a user can choose a program that is not
          * on their system path. 
          */
-        static String DefaultScriptPath = Path.Combine(
-            Path.GetDirectoryName(
-                System.Reflection.Assembly.GetExecutingAssembly().Location
-                ),
-            "python");
         static String DefaultPythonInterpreterPath = "python";
         static String DefaultRscriptPath = "Rscript";
         #endregion
@@ -53,7 +62,6 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             String rscriptExecutablePath = null, 
             String scriptRoot = null)
         {
-            this.ScriptRoot = (scriptRoot == null ? DefaultScriptPath : scriptRoot);
             this.PythonExecutablePath = 
                 (((pythonExecutablePath == null) || (pythonExecutablePath == "")) ? DefaultPythonInterpreterPath : pythonExecutablePath).Escape();
             this.RscriptExecutablePath = 
@@ -85,75 +93,27 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             }
         }
 
-        public bool VerifyRscriptExecutable()
-        {
-            Console.WriteLine(this.RscriptExecutablePath);
-            try
-            {
-                Process.Start(this.RscriptExecutablePath, " -h");
-                return true;
-            }
-            catch (FileNotFoundException)
-            {
-                return false;
-            }
-            catch (Win32Exception)
-            {
-                return false;
-            }
-        }
-
-        public bool VerifyScriptRoot()
-        {
-            return Directory.Exists(this.ScriptRoot);
-        }
-
         public bool VerifyFileSystemTargets()
         {
             if (!this.VerifyPythonExecutable())
             {
                 throw new PythonInterpreterNotFoundException("Could not locate python");
             }
-            //if (!this.VerifyRscriptExecutable())
-            //{
-            //    throw new RscriptNotFoundException("Could not locate Rscript");
-            //}
-            if (!this.VerifyScriptRoot())
-            {
-                throw new ScriptsNotFoundException("Could not locate scripts");
-            }
+
             return true;
         }
         #endregion
-       
-        /// <summary>
-        /// Deprecated
-        /// </summary>
-        public void InstallRDependencies()
-        {
-            ProcessManager proc = new ProcessManager(this.RscriptExecutablePath,
-                "--vanilla " + Path.Combine(this.ScriptRoot, "glycresoft_ms2_classification", "R", "install_dependencies.R").QuoteWrap());
-
-            proc.Start();
-            proc.WaitForExit();
-            if (!proc.CheckExitSuccessfully())
-            {
-                throw new RscriptErrorException(proc.GenerateDumpMessage());
-            }
-
-            this.LastCall = proc;            
-        }
 
         public void InstallPythonDependencies()
         {
-            ProcessManager proc = new ProcessManager(this.PythonExecutablePath, "-m pip -h");
+            PythonProcessManager proc = new PythonProcessManager(this.PythonExecutablePath, "-m pip -h");
             proc.Start();
             proc.WaitForExit();
             if (!proc.CheckExitSuccessfully())
             {
                 throw new PythonDependencyInstallerException("The Python Package Manager pip wasn't found. Is it installed? If not, go to https://pip.readthedocs.org/en/latest/installing.html for more information on how to get it. " + proc.GenerateDumpMessage());
-            } 
-            proc = new ProcessManager(this.PythonExecutablePath, Path.Combine(this.ScriptRoot, "glycresoft_ms2_classification", "entry_point.py").QuoteWrap() + " -h" );
+            }
+            proc = new PythonProcessManager(PythonEntryPoint, " -h");
             proc.Start();
             proc.WaitForExit();
             Console.WriteLine(proc.ExitCode);
@@ -163,10 +123,10 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             }
             
         }
-        public void CheckPythonDependencies()
-        {
+        //public void CheckPythonDependencies()
+        //{
 
-        }
+        //}
         /// <summary>
         /// Executes the Python script pipeline stored at @ScriptRoot, with the 
         /// entry_point.py entry-point. The pipeline emits intermediary file names,
@@ -181,57 +141,31 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
             String glycosylationSitesFilePath, String ms2DeconvolutionFilePath,
             String modelDataFilePath, 
             double ms1MatchingTolerance, double ms2MatchingTolerance,
-            String[] constantModifications, String[] variableModifications, 
-            String method, String outputFilePath = null)
+            String proteinProspectorXMLFilePath,
+            String method, String outputFilePath = null,
+            int numProcesses = 2,
+            int decoyToRealRatio = 20,
+            bool randomOnly = false
+            )
         {
-            String argumentStringTemplate = " classify-with-model --ms1-results-file {0} --glycosylation-sites-file {1} --deconvoluted-spectra-file {2} --model-file {3} --ms1-match-tolerance {4} --ms2-match-tolerance {5} --method {6} {7}";
-
-            
-
-            String outFileOpt = outputFilePath == null ? "" : "--out " + outputFilePath.QuoteWrap();
-
-            String goldStandardOpt = modelDataFilePath == null ? "" :
-                "--gold-standard-file " + modelDataFilePath.QuoteWrap();
-
-            String modificationList = ArgumentPassingUtility.IterableToAppendArgument("--constant-modification-list", constantModifications, true);
-            modificationList += " " + ArgumentPassingUtility.IterableToAppendArgument("--variable-modification-list", variableModifications, true);
+            String argumentStringTemplate = " --n {9}  classify-with-model --ms1-results-file {0} --glycosylation-sites-file {1} --deconvoluted-spectra-file {2} --model-file {3} --ms1-match-tolerance {4} --ms2-match-tolerance {5} --method {6} --protein_prospector_xml {7} {8} --decoy-to-real-ratio {10} {11}";
 
             String arguments = String.Format(argumentStringTemplate, new object[]{
                ms1MatchFilePath.QuoteWrap(),
                glycosylationSitesFilePath.QuoteWrap(),             
                ms2DeconvolutionFilePath.QuoteWrap(),
                modelDataFilePath.QuoteWrap(), 
-               ms1MatchingTolerance, ms2MatchingTolerance,
+               ms1MatchingTolerance, 
+               ms2MatchingTolerance,
                method.QuoteWrap(),
-               modificationList,
-               outFileOpt
+               proteinProspectorXMLFilePath.QuoteWrap(),
+               outputFilePath == null ? "" : "--out " + outputFilePath.QuoteWrap(), 
+               numProcesses,
+               decoyToRealRatio,
+               randomOnly ? " --random-only " : ""
             });
 
-            #region experimental json parameter file
-
-            //dynamic paramExample = new JObject();
-            //paramExample.rscript_path = this.RscriptExecutablePath;
-            //paramExample.ms1_results_file = ms1MatchFilePath;
-            //paramExample.glycosylation_sites_file = glycosylationSitesFilePath;
-            //paramExample.deconvoluted_spectra_file = ms2DeconvolutionFilePath;
-            //paramExample.gold_standard_file = modelDataFilePath;
-            //paramExample.ms1_match_tolerance = ms1MatchingTolerance;
-            //paramExample.ms2_match_tolerance = ms2MatchingTolerance;
-            //paramExample.constant_modification_list = JArray.FromObject(constantModifications);
-            //paramExample.variable_modification_list = JArray.FromObject(variableModifications);
-            ////paramExample.method
-
-            //string tempFile = Path.GetTempFileName();
-            //File.WriteAllText(tempFile, paramExample.ToString());
-            //Console.WriteLine(paramExample);
-            //Console.WriteLine(tempFile);
-            
-            #endregion
-
-            Console.WriteLine(arguments);
-
-            ProcessManager proc = new ProcessManager(this.PythonExecutablePath,
-                Path.Combine(this.ScriptRoot, "glycresoft_ms2_classification", "entry_point.py").QuoteWrap() + " " + arguments);
+            PythonProcessManager proc = new PythonProcessManager(PythonEntryPoint, arguments);
             
             proc.Start();
             proc.WaitForExit();
@@ -273,21 +207,22 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public String RunModelBuildingPythonPipeline(String ms1MatchFilePath,
             String glycosylationSitesFilePath, String ms2DeconvolutionFilePath,
             double ms1MatchingTolerance, double ms2MatchingTolerance,
-            String[] constantModifications, String[] variableModifications, String method)
+            String proteinProspectorXMLFilePath, String method, int numProcesses=2)
         {
-            String argumentStringTemplate = " build-model --ms1-results-file {0} --glycosylation-sites-file {1} --deconvoluted-spectra-file {2} --ms1-match-tolerance {3} --ms2-match-tolerance {4} {5} --method {6}";
-
-            String modificationList = ArgumentPassingUtility.IterableToAppendArgument("--constant-modification-list", constantModifications, true);
-            modificationList += " " + ArgumentPassingUtility.IterableToAppendArgument("--variable-modification-list", variableModifications, true);
+            String argumentStringTemplate = " --n {7} build-model --ms1-results-file {0} --glycosylation-sites-file {1} --deconvoluted-spectra-file {2} --ms1-match-tolerance {3} --ms2-match-tolerance {4}" +
+                " --protein_prospector_xml {5} --method {6}";
 
             String arguments = String.Format(argumentStringTemplate, new object[]{
                ms1MatchFilePath.QuoteWrap(), 
                glycosylationSitesFilePath.QuoteWrap(), 
                ms2DeconvolutionFilePath.QuoteWrap(), ms1MatchingTolerance, 
-               ms2MatchingTolerance, modificationList, method.QuoteWrap()
+               ms2MatchingTolerance, proteinProspectorXMLFilePath.QuoteWrap(),
+               method.QuoteWrap(), numProcesses
             });
 
-            ProcessManager proc = new ProcessManager(this.PythonExecutablePath, Path.Combine(this.ScriptRoot, "glycresoft_ms2_classification", "entry_point.py").QuoteWrap() + " " + arguments);
+            Console.WriteLine(arguments);
+
+            PythonProcessManager proc = new PythonProcessManager(PythonEntryPoint, arguments);
 
             proc.Start();
             proc.WaitForExit();
@@ -297,11 +232,27 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
                     proc.GenerateDumpMessage()
                     );
             }
-
+           
             //Sniff the StdOut stream of the pipeline ProcessManager to pull out
             //the output file path. It should be the last line emitted.
-            String outputFile = proc.Out.Split(new String[] { Environment.NewLine }, 
-                StringSplitOptions.RemoveEmptyEntries).Last();
+            String outputFile = null;
+            try
+            {
+                outputFile = proc.Out.Split(new String[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Last();
+            }
+            catch (InvalidOperationException)
+            {
+                try
+                {
+                    Thread.Sleep(100);
+                    outputFile = proc.Out.Split(new String[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Last();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new PythonScriptErrorException("Could not find output file in " + proc.Out, new PythonScriptErrorException(
+                    proc.GenerateDumpMessage()));
+                }
+            }
 
             //Store this ProcessManager instance for inspection later
             this.LastCall = proc;
@@ -319,8 +270,8 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         {
             String argumentStringTemplate = " model-diagnostics --model-file {0} --method {1}";
 
-            String argumentString = String.Format(argumentStringTemplate, modelFilePath, method);
-            ProcessManager proc = new ProcessManager(this.PythonExecutablePath, Path.Combine(this.ScriptRoot, "glycresoft_ms2_classification", "entry_point.py").QuoteWrap() + " " + argumentString);
+            String arguments = String.Format(argumentStringTemplate, modelFilePath.QuoteWrap(), method);
+            PythonProcessManager proc = new PythonProcessManager(PythonEntryPoint, arguments);
 
             proc.Start();
             proc.WaitForExit();
@@ -333,8 +284,23 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
 
             //Sniff the StdOut stream of the pipeline ProcessManager to pull out
             //the output file path. It should be the last line emitted.
-            String outputFile = proc.Out.Split(new String[] { Environment.NewLine }, 
-                StringSplitOptions.RemoveEmptyEntries).Last();
+            String outputFile = null;
+            try
+            {
+                outputFile = proc.Out.Split(new String[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Last();
+            }
+            catch (InvalidOperationException)
+            {
+                try
+                {
+                    Thread.Sleep(100);
+                    outputFile = proc.Out.Split(new String[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Last();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new PythonScriptErrorException("Could not find output file in " + proc.Out);
+                }
+            }
 
             //Store this ProcessManager instance for inspection later
             this.LastCall = proc;
@@ -344,8 +310,8 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
         public String RunReclassifyWithModelTask(String targetFilePath, String modelFilePath, String method)
         {
             String argumentStringTemplate = " reclassify-with-model --target-file {0} --model-file {1} --method {2}";
-            String argumentString = String.Format(argumentStringTemplate, targetFilePath.QuoteWrap(), modelFilePath.QuoteWrap(), method.QuoteWrap());
-            ProcessManager proc = new ProcessManager(this.PythonExecutablePath, Path.Combine(this.ScriptRoot, "glycresoft_ms2_classification", "entry_point.py").QuoteWrap() + " " + argumentString);
+            String arguments = String.Format(argumentStringTemplate, targetFilePath.QuoteWrap(), modelFilePath.QuoteWrap(), method.QuoteWrap());
+            PythonProcessManager proc = new PythonProcessManager(PythonEntryPoint, arguments);
 
             proc.Start();
             proc.WaitForExit();
@@ -358,12 +324,51 @@ namespace GlycReSoft.TandemGlycopeptidePipeline
 
             //Sniff the StdOut stream of the pipeline ProcessManager to pull out
             //the output file path. It should be the last line emitted.
-            String outputFile = proc.Out.Split(new String[] { Environment.NewLine },
-                StringSplitOptions.RemoveEmptyEntries).Last();
+            String outputFile = null;
+            try
+            {
+                outputFile = proc.Out.Split(new String[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Last();
+            }
+            catch (InvalidOperationException)
+            {
+                try
+                {
+                    Thread.Sleep(100);
+                    outputFile = proc.Out.Split(new String[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Last();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new PythonScriptErrorException("Could not find output file in " + proc.Out);
+                }
+            }
 
             //Store this ProcessManager instance for inspection later
             this.LastCall = proc;
             return outputFile;
+        }
+
+        public String ConvertToCSV(String targetFilePath, String resultFile=null)
+        {
+            resultFile = resultFile == null ?
+                Path.Combine(Path.GetDirectoryName(targetFilePath), Path.GetFileNameWithoutExtension(targetFilePath) + ".csv") : resultFile;
+
+            String arguments = String.Format(
+" -c \"from glycresoft_ms2_classification import prediction_tools;data=prediction_tools.prepare_model_file(r'{0}');data.to_csv(r'{1}')\"", 
+targetFilePath, resultFile);
+            Console.WriteLine(arguments);
+            PythonProcessManager proc = new PythonProcessManager(PythonExecutablePath, arguments);
+
+            proc.Start();
+            proc.WaitForExit();
+            if (!proc.CheckExitSuccessfully())
+            {
+                throw new PythonScriptErrorException(
+                    proc.GenerateDumpMessage()
+                    );
+            }
+
+
+            return resultFile;
         }
     }
 
